@@ -1,21 +1,23 @@
-package main
+package view
 
 import (
 	"errors"
 	"net/http"
 
-	
 	"github.com/angelofallars/htmx-go"
-
-	"github.com/user/project/templates"
-	"github.com/user/project/templates/pages"
-	
 	"github.com/gin-gonic/gin"
+
+    "app-services-go/cmd/api/http/view/templates/pages"
+    "app-services-go/cmd/api/http/view/templates"
 )
+
+// go run github.com/a-h/templ/cmd/templ@latest generate
+
+
 
 // indexViewHandler handles a view for the index page.
 func indexViewHandler(c *gin.Context) {
-	
+
 	// Define template meta tags.
 	metaTags := pages.MetaTags(
 		"gowebly, htmx example page, go with htmx",               // define meta keywords
@@ -41,7 +43,7 @@ func indexViewHandler(c *gin.Context) {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
-	
+
 }
 
 // showContentAPIHandler handles an API endpoint to show content.

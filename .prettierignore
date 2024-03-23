@@ -1,0 +1,7 @@
+# Auto-generated .gitignore file.
+
+# Ignore static files.
+static/
+
+# Ignore templates.
+templates/

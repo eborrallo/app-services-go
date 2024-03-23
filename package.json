@@ -1,0 +1,34 @@
+{
+  "name": "project",
+  "version": "0.0.0",
+  "description": "Frontend part of the project.",
+  "license": "MIT",
+  "browserslist": "> 0.5%, last 2 versions, not dead",
+  "source": [
+    "./cmd/api/http/view/assets/scripts.js",
+    "./cmd/api/http/view/assets/styles.scss"
+  ],
+  "targets": {
+    "default": {
+      "distDir": "./static"
+    }
+  },
+  "scripts": {
+    "watch": "parcel watch",
+    "fmt": "prettier --write .",
+    "dev": "parcel build --no-optimize",
+    "build": "rm -rf dist .parcel-cache && parcel build "
+  },
+  "dependencies": {
+    "@tailwindcss/typography": "latest",
+    "tailwindcss": "latest",
+    "daisyui": "latest",
+    "alpinejs": "latest",
+    "htmx.org": "latest"
+  },
+  "devDependencies": {
+    "@parcel/transformer-sass": "latest",
+    "parcel": "latest",
+    "prettier": "latest"
+  }
+}
