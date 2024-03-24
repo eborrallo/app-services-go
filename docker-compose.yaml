@@ -1,14 +1,6 @@
 version: '3.8'
 
 services:
-#  mooc-app-services-go:
-#    build: .
-#    environment:
-#      MOOC_HOST: 0.0.0.0
-#      MOOC_DBHOST: mysql
-#    ports:
-#      - 8080:8080
-
   mysql:
     image: mysql:8.0.22
     ports:
@@ -30,5 +22,15 @@ services:
     image: redis:alpine
     ports:
       - "6379:6379"
+  app-services-go:
+    build: .
+    restart: unless-stopped
+    environment:
+      MOOC_HOST: 0.0.0.0
+      MOOC_DBHOST: mysql
+      RABBITMQHOSTNAME: rabbitmq
+    ports:
+      - "8080:8080"
+
 volumes:
   mysql_data:

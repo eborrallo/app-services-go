@@ -6,7 +6,7 @@ toolchain go1.22.1
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.2
-	github.com/a-h/templ v0.2.639
+	github.com/a-h/templ v0.2.646
 	github.com/angelofallars/htmx-go v0.5.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-sql-driver/mysql v1.7.1
