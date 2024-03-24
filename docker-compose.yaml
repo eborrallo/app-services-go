@@ -22,15 +22,16 @@ services:
     image: redis:alpine
     ports:
       - "6379:6379"
-  app-services-go:
-    build: .
-    restart: unless-stopped
-    environment:
-      MOOC_HOST: 0.0.0.0
-      MOOC_DBHOST: mysql
-      RABBITMQHOSTNAME: rabbitmq
-    ports:
-      - "8080:8080"
+#  app-services-go:
+#    build: .
+#    restart: unless-stopped
+#    command: /go/bin/app-services-go
+#    environment:
+#      MOOC_HOST: 0.0.0.0
+#      MOOC_DBHOST: mysql
+#      RABBITMQHOSTNAME: rabbitmq
+#    ports:
+#      - "3000:8080"
 
 volumes:
   mysql_data:

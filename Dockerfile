@@ -10,6 +10,6 @@ RUN CGO_ENABLED=0  go run github.com/a-h/templ/cmd/templ@latest generate
 RUN CGO_ENABLED=0 go build -o /go/bin/app-services-go cmd/api/main.go
 
 # Building image with the binary
-FROM scratch
-COPY --from=build /go/bin/app-services-go /go/bin/app-services-go
-ENTRYPOINT ["/go/bin/app-services-go"]
+#FROM scratch
+#COPY --from=build /go/bin/app-services-go /go/bin/app-services-go
+#ENTRYPOINT ["/go/bin/app-services-go"]

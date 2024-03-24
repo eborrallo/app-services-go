@@ -6,7 +6,7 @@ import (
 )
 
 type ServerConfig struct {
-	Host            string        `default:"localhost"`
+	Host            string        `default:"0.0.0.0"`
 	Port            uint          `default:"8080"`
 	ShutdownTimeout time.Duration `default:"10s"`
 	Mode            string        `default:"debug"`
