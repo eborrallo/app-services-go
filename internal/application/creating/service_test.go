@@ -7,9 +7,10 @@ import (
 	"app-services-go/kit/event/eventmocks"
 	"context"
 	"errors"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"testing"
 )
 
 func Test_CourseService_CreateCourse_RepositoryError(t *testing.T) {
@@ -36,7 +37,7 @@ func Test_CourseService_CreateCourse_EventsBusError(t *testing.T) {
 	courseDuration := "10 months"
 
 	courseRepositoryMock := new(storagemocks.CourseRepository)
-	courseRepositoryMock.On("Save", mock.Anything, mock.AnythingOfType("course.Course")).Return(nil)
+	courseRepositoryMock.On("Save", mock.Anything, mock.AnythingOfType("Course")).Return(nil)
 
 	eventBusMock := new(eventmocks.Bus)
 	eventBusMock.On("Publish", mock.Anything, mock.AnythingOfType("[]event.Event")).Return(errors.New("something unexpected happened"))
@@ -56,7 +57,7 @@ func Test_CourseService_CreateCourse_Succeed(t *testing.T) {
 	courseDuration := "10 months"
 
 	courseRepositoryMock := new(storagemocks.CourseRepository)
-	courseRepositoryMock.On("Save", mock.Anything, mock.AnythingOfType("course.Course")).Return(nil)
+	courseRepositoryMock.On("Save", mock.Anything, mock.AnythingOfType("Course")).Return(nil)
 
 	eventBusMock := new(eventmocks.Bus)
 	eventBusMock.On("Publish", mock.Anything, mock.MatchedBy(func(events []event.Event) bool {
