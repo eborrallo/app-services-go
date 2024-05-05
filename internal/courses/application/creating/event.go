@@ -1,8 +1,8 @@
 package creating
 
 import (
-	"app-services-go/internal/application/increasing"
-	course "app-services-go/internal/domain"
+	"app-services-go/internal/courses/application/increasing"
+	course "app-services-go/internal/courses/domain"
 	"app-services-go/kit/event"
 	"errors"
 )

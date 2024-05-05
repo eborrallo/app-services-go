@@ -1,8 +1,8 @@
 package creating
 
 import (
-	course "app-services-go/internal/domain"
-	"app-services-go/internal/infrastructure/storage/storagemocks"
+	course "app-services-go/internal/courses/domain"
+	"app-services-go/internal/courses/infrastructure/storage/storagemocks"
 	"app-services-go/kit/event"
 	"app-services-go/kit/event/eventmocks"
 	"context"

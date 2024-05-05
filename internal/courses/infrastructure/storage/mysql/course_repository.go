@@ -2,12 +2,13 @@ package mysql
 
 import (
 	"app-services-go/configs"
-	course "app-services-go/internal/domain"
+	course "app-services-go/internal/courses/domain"
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/huandu/go-sqlbuilder"
 	"time"
+
+	"github.com/huandu/go-sqlbuilder"
 )
 
 // CourseRepository is a MySQL course.CourseRepository implementation.

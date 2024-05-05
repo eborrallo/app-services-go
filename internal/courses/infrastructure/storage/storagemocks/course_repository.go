@@ -3,7 +3,7 @@
 package storagemocks
 
 import (
-	domain "app-services-go/internal/domain"
+	domain "app-services-go/internal/courses/domain"
 	context "context"
 
 	mock "github.com/stretchr/testify/mock"

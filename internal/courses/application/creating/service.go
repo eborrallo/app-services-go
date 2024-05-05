@@ -1,7 +1,7 @@
 package creating
 
 import (
-	course "app-services-go/internal/domain"
+	course "app-services-go/internal/courses/domain"
 	"context"
 
 	"app-services-go/kit/event"

@@ -2,13 +2,14 @@ package mysql
 
 import (
 	"app-services-go/configs"
-	course "app-services-go/internal/domain"
+	course "app-services-go/internal/courses/domain"
 	"context"
 	"errors"
+	"testing"
+
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func Test_CourseRepository_Save_RepositoryError(t *testing.T) {

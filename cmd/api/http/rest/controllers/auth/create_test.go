@@ -1,4 +1,4 @@
-package courses
+package auth
 
 import (
 	"bytes"
@@ -15,28 +15,29 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestHandler_CreateCourses_ServiceError(t *testing.T) {
+func TestHandler_CreateUser_ServiceError(t *testing.T) {
 	commandBus := new(commandmocks.Bus)
 	commandBus.On(
 		"Dispatch",
 		mock.Anything,
-		mock.AnythingOfType("creating.CourseCommand"),
+		mock.AnythingOfType("creating.UserCommand"),
 	).Return(nil)
 
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
-	r.POST("/courses", CreateHandler(commandBus))
+	r.POST("/user", CreateHandler(commandBus))
 
 	t.Run("given an invalid request it returns 400", func(t *testing.T) {
 		createCourseReq := createRequest{
-			Name:     "Demo Course",
-			Duration: "10 months",
+			Name:     "name",
+			Email:    "aaa@aa.com",
+			Password: "123",
 		}
 
 		b, err := json.Marshal(createCourseReq)
 		require.NoError(t, err)
 
-		req, err := http.NewRequest(http.MethodPost, "/courses", bytes.NewBuffer(b))
+		req, err := http.NewRequest(http.MethodPost, "/user", bytes.NewBuffer(b))
 		require.NoError(t, err)
 
 		rec := httptest.NewRecorder()
@@ -51,14 +52,15 @@ func TestHandler_CreateCourses_ServiceError(t *testing.T) {
 	t.Run("given a valid request it returns 201", func(t *testing.T) {
 		createCourseReq := createRequest{
 			ID:       "8a1c5cdc-ba57-445a-994d-aa412d23723f",
-			Name:     "Demo Course",
-			Duration: "10 months",
+			Name:     "name",
+			Email:    "aaa@aa.com",
+			Password: "123",
 		}
 
 		b, err := json.Marshal(createCourseReq)
 		require.NoError(t, err)
 
-		req, err := http.NewRequest(http.MethodPost, "/courses", bytes.NewBuffer(b))
+		req, err := http.NewRequest(http.MethodPost, "/user", bytes.NewBuffer(b))
 		require.NoError(t, err)
 
 		rec := httptest.NewRecorder()

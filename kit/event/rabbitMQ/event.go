@@ -4,9 +4,10 @@ import (
 	"app-services-go/kit/event"
 	"context"
 	"encoding/json"
-	"github.com/rabbitmq/amqp091-go"
 	"log"
 	"os"
+
+	"github.com/rabbitmq/amqp091-go"
 )
 
 // EventBus is an rabbitMq implementation of the event.Bus.
@@ -61,11 +62,12 @@ func (b *EventBus) Publish(ctx context.Context, events []event.Event) error {
 
 // Subscribe implements the event.Bus interface.
 func (b *EventBus) Subscribe(subscriber event.Subscriber) {
-	messageChannel, err := b.connection.Consume(b.queueNameFormatter.Format(subscriber))
+	queueName := b.queueNameFormatter.Format(subscriber)
+	messageChannel, err := b.connection.Consume(queueName)
 	handleError(err, "Could not register consumer")
 
 	go func() {
-		log.Printf("Consumer ready, PID: %d", os.Getpid())
+		log.Printf("Consumer ready, Name %s_consumer PID: %d", queueName, os.Getpid())
 		//a, _ := json.Marshal(course.NewCourseCreatedEvent("1", "name", "duration"))
 		//log.Println(string(a))
 		for d := range messageChannel {

@@ -7,6 +7,9 @@
 .idea/
 .vscode/
 
+# Docker data
+data/
+
 # Go workflow files.
 go.work
 

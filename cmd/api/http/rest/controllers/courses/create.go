@@ -1,12 +1,13 @@
 package courses
 
 import (
-	"app-services-go/internal/application/creating"
-	course "app-services-go/internal/domain"
+	"app-services-go/internal/courses/application/creating"
+	course "app-services-go/internal/courses/domain"
 	"errors"
 	"net/http"
 
 	"app-services-go/kit/command"
+
 	"github.com/gin-gonic/gin"
 )
 

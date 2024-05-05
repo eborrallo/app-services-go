@@ -1,13 +1,14 @@
 package courses
 
 import (
-	"app-services-go/internal/application/fetching"
-	course "app-services-go/internal/domain"
+	"app-services-go/internal/courses/application/fetching"
+	course "app-services-go/internal/courses/domain"
 	"app-services-go/kit/query"
 	"errors"
-	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 type retrieveRequest struct {

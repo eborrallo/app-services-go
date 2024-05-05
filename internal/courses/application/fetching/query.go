@@ -1,7 +1,7 @@
 package fetching
 
 import (
-	course "app-services-go/internal/domain"
+	course "app-services-go/internal/courses/domain"
 	"app-services-go/kit/query"
 	"context"
 	"errors"

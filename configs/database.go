@@ -1,8 +1,9 @@
 package configs
 
 import (
-	"github.com/kelseyhightower/envconfig"
 	"time"
+
+	"github.com/kelseyhightower/envconfig"
 )
 
 type DatabaseConfig struct {

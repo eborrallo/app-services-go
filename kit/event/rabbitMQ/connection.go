@@ -2,8 +2,9 @@ package rabbitMQ
 
 import (
 	"fmt"
-	"github.com/rabbitmq/amqp091-go"
 	"log"
+
+	"github.com/rabbitmq/amqp091-go"
 )
 
 type Settings struct {
@@ -116,7 +117,7 @@ func (c *Connection) queueArguments(deadLetterExchange string, deadLetterQueue s
 }
 
 func (c *Connection) Consume(queueName string) (<-chan amqp091.Delivery, error) {
-	return c.channel.Consume(queueName, "consumer", false, false, false, false, nil)
+	return c.channel.Consume(queueName, queueName+"_consumer", false, false, false, false, nil)
 }
 func (c *Connection) Ack(message amqp091.Delivery) error {
 	return message.Ack(false)
