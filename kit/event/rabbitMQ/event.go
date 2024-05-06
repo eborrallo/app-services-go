@@ -68,8 +68,6 @@ func (b *EventBus) Subscribe(subscriber event.Subscriber) {
 
 	go func() {
 		log.Printf("Consumer ready, Name %s_consumer PID: %d", queueName, os.Getpid())
-		//a, _ := json.Marshal(course.NewCourseCreatedEvent("1", "name", "duration"))
-		//log.Println(string(a))
 		for d := range messageChannel {
 			//log.Printf("Received a message: %s", d.Body)
 			queueName := b.queueNameFormatter.Format(subscriber)

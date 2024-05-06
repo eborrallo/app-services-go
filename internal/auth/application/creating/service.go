@@ -4,6 +4,7 @@ import (
 	user "app-services-go/internal/auth/domain"
 	"context"
 
+	"app-services-go/kit/crypt"
 	"app-services-go/kit/event"
 )
 
@@ -24,7 +25,12 @@ func NewUserService(UserRepository user.UserRepository, eventBus event.Bus) User
 
 // CreateUser implements the creating.UserService interface.
 func (s UserService) CreateUser(ctx context.Context, id, name, email, password string) error {
-	User, err := user.NewUser(id, name, email, password)
+	encodePassword, err := crypt.Encode(password)
+	if err != nil {
+		return err
+	}
+
+	User, err := user.NewUser(id, name, email, encodePassword)
 	if err != nil {
 		return err
 	}

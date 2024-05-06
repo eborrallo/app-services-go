@@ -3,6 +3,7 @@ package creating
 import (
 	user "app-services-go/internal/auth/domain"
 	"app-services-go/internal/auth/infrastructure/storage/storagemocks"
+	"app-services-go/kit/crypt"
 	"app-services-go/kit/event"
 	"app-services-go/kit/event/eventmocks"
 	"context"
@@ -58,9 +59,10 @@ func Test_UserService_CreateUser_Succeed(t *testing.T) {
 	userName := "Test User"
 	userEmail := "aaa@gmail.com"
 	userPassword := "123123"
-
 	userRepositoryMock := new(storagemocks.UserRepository)
-	userRepositoryMock.On("Save", mock.Anything, mock.AnythingOfType("User")).Return(nil)
+	userRepositoryMock.On("Save", mock.Anything, mock.MatchedBy(func(user user.User) bool {
+		return user.ID == userID && user.Name == userName && user.Email == userEmail && crypt.Compare(userPassword, user.Password)
+	})).Return(nil)
 
 	eventBusMock := new(eventmocks.Bus)
 	eventBusMock.On("Publish", mock.Anything, mock.MatchedBy(func(events []event.Event) bool {
