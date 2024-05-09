@@ -1,18 +1,23 @@
 package sending_email_validation
 
 import (
-	smtp "app-services-go/kit/email/smpt"
+	"app-services-go/internal/auth/domain"
+	"app-services-go/kit/crypt"
 	"log"
 )
 
-type EmailValidatorSenderService struct{}
-
-func NewEmailValidatorSenderService() EmailValidatorSenderService {
-	return EmailValidatorSenderService{}
+type EmailValidatorSenderService struct {
+	Sender domain.Sender
 }
 
-func (s EmailValidatorSenderService) Send(email string) error {
+func NewEmailValidatorSenderService(Sender domain.Sender) EmailValidatorSenderService {
+	return EmailValidatorSenderService{Sender: Sender}
+}
+
+func (s EmailValidatorSenderService) Send(email string, userId string) error {
 	log.Println("Sending email validation", email)
-	smtp.Send(email, "Email validation")
+	token := crypt.Encrypt(userId)
+
+	s.Sender.Send(email, "Email validation "+token)
 	return nil
 }

@@ -2,6 +2,7 @@ package creating
 
 import (
 	user "app-services-go/internal/auth/domain"
+	"app-services-go/internal/auth/domain/events"
 	"app-services-go/internal/auth/infrastructure/storage/storagemocks"
 	"app-services-go/kit/crypt"
 	"app-services-go/kit/event"
@@ -40,8 +41,9 @@ func Test_UserService_CreateUser_EventsBusError(t *testing.T) {
 	userPassword := "123123"
 
 	userRepositoryMock := new(storagemocks.UserRepository)
-	userRepositoryMock.On("Save", mock.Anything, mock.AnythingOfType("User")).Return(nil)
-
+	userRepositoryMock.On("Save", mock.Anything, mock.MatchedBy(func(user user.User) bool {
+		return user.ID == userID && user.Name == userName && user.Email == userEmail && crypt.Compare(userPassword, user.Password)
+	})).Return(nil)
 	eventBusMock := new(eventmocks.Bus)
 	eventBusMock.On("Publish", mock.Anything, mock.AnythingOfType("[]event.Event")).Return(errors.New("something unexpected happened"))
 
@@ -65,8 +67,8 @@ func Test_UserService_CreateUser_Succeed(t *testing.T) {
 	})).Return(nil)
 
 	eventBusMock := new(eventmocks.Bus)
-	eventBusMock.On("Publish", mock.Anything, mock.MatchedBy(func(events []event.Event) bool {
-		evt := events[0].(user.UserCreatedEvent)
+	eventBusMock.On("Publish", mock.Anything, mock.MatchedBy(func(_events []event.Event) bool {
+		evt := _events[0].(events.UserCreatedEvent)
 		return evt.UserName() == userName
 	})).Return(nil)
 

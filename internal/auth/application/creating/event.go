@@ -2,7 +2,7 @@ package creating
 
 import (
 	"app-services-go/internal/auth/application/sending_email_validation"
-	user "app-services-go/internal/auth/domain"
+	"app-services-go/internal/auth/domain/events"
 
 	"app-services-go/kit/event"
 	"errors"
@@ -19,13 +19,13 @@ func NewSendEmailVerificationOnUserCreated(service sending_email_validation.Emai
 }
 
 func (e SendEmailVerificationOnUserCreated) On(evt event.Event) error {
-	userCreatedEvt, ok := evt.(user.UserCreatedEvent)
+	userCreatedEvt, ok := evt.(events.UserCreatedEvent)
 	if !ok {
 		return errors.New("unexpected event")
 	}
-	return e.sendVerificationEmailService.Send(userCreatedEvt.Email)
+	return e.sendVerificationEmailService.Send(userCreatedEvt.Email, userCreatedEvt.UserID())
 }
 
 func (e SendEmailVerificationOnUserCreated) SubscribedTo() event.Event {
-	return event.Event(user.UserCreatedEvent{})
+	return event.Event(events.UserCreatedEvent{})
 }

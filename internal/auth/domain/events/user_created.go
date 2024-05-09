@@ -1,4 +1,4 @@
-package domain
+package events
 
 import (
 	"app-services-go/kit/event"

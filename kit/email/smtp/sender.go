@@ -6,7 +6,15 @@ import (
 	"net/smtp"
 )
 
-func Send(email string, content string) {
+type Sender struct {
+}
+
+// NewSender returns the default Service interface implementation.
+func NewSender() Sender {
+	return Sender{}
+}
+
+func (s Sender) Send(email string, content string) {
 
 	config, error := configs.GetSmtpConfig()
 	if error != nil {
@@ -15,9 +23,7 @@ func Send(email string, content string) {
 	}
 
 	// Receiver email address.
-	to := []string{
-		"sender@example.com",
-	}
+	to := []string{email}
 	// Message.
 	message := []byte(content)
 	// Authentication.

@@ -21,8 +21,8 @@ func Test_UserRepository_Save_RepositoryError(t *testing.T) {
 	require.NoError(t, err)
 
 	sqlMock.ExpectExec(
-		"INSERT INTO users (id, name, email, password) VALUES (?, ?, ?, ?)").
-		WithArgs(userID, userName, userEmail, userPassword).
+		"INSERT INTO users (id, name, email, password, validated) VALUES (?, ?, ?, ?, ?)").
+		WithArgs(userID, userName, userEmail, userPassword, false).
 		WillReturnError(errors.New("something-failed"))
 	c, _ := configs.GetDatabaseConfig()
 	repo := NewUserRepository(db, c)
@@ -43,8 +43,8 @@ func Test_UserRepository_Save_Succeed(t *testing.T) {
 	require.NoError(t, err)
 
 	sqlMock.ExpectExec(
-		"INSERT INTO users (id, name, email, password) VALUES (?, ?, ?, ?)").
-		WithArgs(userID, userName, userEmail, userPassword).
+		"INSERT INTO users (id, name, email, password, validated) VALUES (?, ?, ?, ?, ?)").
+		WithArgs(userID, userName, userEmail, userPassword, false).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 	c, _ := configs.GetDatabaseConfig()
 

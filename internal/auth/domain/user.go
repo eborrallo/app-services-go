@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"app-services-go/internal/auth/domain/events"
 	"app-services-go/kit/event"
 
 	"github.com/google/uuid"
@@ -27,10 +28,13 @@ func NewUserID(value string) (string, error) {
 
 // User is the data structure that represents a User.
 type User struct {
-	ID       string `json:"id"`
-	Name     string `json:"name"`
-	Email    string `json:"email"`
-	Password string `json:"duration"`
+	ID           string `json:"id"`
+	Name         string `json:"name"`
+	Email        string `json:"email"`
+	Password     string `json:"duration"`
+	Validated    bool   `json:"validated"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
 
 	events []event.Event
 }
@@ -38,7 +42,9 @@ type User struct {
 // UserRepository defines the expected behaviour from a User storage.
 type UserRepository interface {
 	Save(ctx context.Context, User User) error
+	Update(ctx context.Context, User User) error
 	FetchById(ctx context.Context, id string) (User, error)
+	FetchByEmail(ctx context.Context, email string) (User, error)
 }
 
 //go:generate mockery --case=snake --outpkg=storagemocks --output=../infrastructure/storage/storagemocks --name=UserRepository
@@ -51,18 +57,31 @@ func NewUser(id, name, email, password string) (User, error) {
 	}
 
 	User := User{
-		ID:       idVO,
-		Name:     name,
-		Email:    email,
-		Password: password,
+		ID:        idVO,
+		Name:      name,
+		Email:     email,
+		Password:  password,
+		Validated: false,
 	}
-	User.Record(NewUserCreatedEvent(idVO, name, email, password))
+	User.Record(events.NewUserCreatedEvent(idVO, name, email, password))
 	return User, nil
 }
 
 // Record records a new domain event.
 func (c *User) Record(evt event.Event) {
 	c.events = append(c.events, evt)
+}
+
+// Record records a new domain event.
+func (c *User) Validate() {
+	c.Validated = true
+	c.Record(events.NewUserValidatedEvent(c.ID, c.Name, c.Email))
+
+} // Record records a new domain event.
+func (c *User) Login(token, refreshToken string) {
+	c.AccessToken = token
+	c.RefreshToken = refreshToken
+	c.Record(events.NewUserLoggedEvent(c.ID, c.Name, c.Email, c.AccessToken, c.RefreshToken))
 }
 
 // PullEvents returns all the recorded domain events.
