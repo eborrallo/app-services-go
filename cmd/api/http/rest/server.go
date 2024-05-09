@@ -33,6 +33,7 @@ func RegisterRoutes(s *gin.Engine, commandBus command.Bus, queryBus query.Bus, r
 		{
 			authApi.POST("/user", auth.CreateHandler(commandBus))
 			authApi.GET("/validate/:token", auth.ValidateHandler(commandBus))
+			authApi.POST("/login", auth.LoginHandler(commandBus, queryBus))
 		}
 	}
 
