@@ -7,7 +7,7 @@ import (
 	"app-services-go/kit/command"
 )
 
-const AuthCommandType command.Type = "command.creating.user"
+const AuthCommandType command.Type = "command.login.user"
 
 // LoginCommand is the command dispatched to create a new user.
 type LoginCommand struct {
