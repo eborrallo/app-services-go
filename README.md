@@ -33,7 +33,7 @@ Example request payload:
 
 Run:
 ```bash
-npm run start:auth:api
+air
 ```
 Grpc services:
  TODO
