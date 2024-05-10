@@ -61,5 +61,5 @@ docker-compose up
 ## Tests
 All the services have tests implemented with Jest and dockerTest, you can run the following command to run the tests:
 ```bash
-npm run test
+go test ./...
 ```
