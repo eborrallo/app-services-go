@@ -71,11 +71,10 @@ func GetPayloadFromToken(tokenString string, payload interface{}) error {
 	if err != nil {
 		return err
 	}
-	/*
-		if !token.Valid {
-			return nil, fmt.Errorf("invalid token")
-		}
-	*/
+
+	if !token.Valid {
+		return fmt.Errorf("invalid token")
+	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {

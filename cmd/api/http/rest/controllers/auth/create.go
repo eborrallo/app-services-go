@@ -15,7 +15,6 @@ type createRequest struct {
 	Password string `json:"password" binding:"required"`
 }
 
-// CreateHandler returns an HTTP controllers for user auth creation.
 func CreateHandler(commandBus command.Bus) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var req createRequest

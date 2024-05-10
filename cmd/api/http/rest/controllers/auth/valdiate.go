@@ -9,7 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ValidateHandler returns an HTTP controllers for user auth validation.
 func ValidateHandler(commandBus command.Bus) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		base64Token := ctx.Param("token")
