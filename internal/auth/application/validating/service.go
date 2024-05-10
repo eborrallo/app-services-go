@@ -1,7 +1,7 @@
 package validating
 
 import (
-	user "app-services-go/internal/auth/domain"
+	"app-services-go/internal/auth/domain"
 	"context"
 
 	"app-services-go/kit/event"
@@ -10,12 +10,12 @@ import (
 // ValidateUserService is the default ValidateUserService interface
 // implementation returned by creating.NewValidateUserService.
 type ValidateUserService struct {
-	UserRepository user.UserRepository
+	UserRepository domain.UserRepository
 	eventBus       event.Bus
 }
 
 // NewValidateUserService returns the default Service interface implementation.
-func NewValidateUserService(UserRepository user.UserRepository, eventBus event.Bus) ValidateUserService {
+func NewValidateUserService(UserRepository domain.UserRepository, eventBus event.Bus) ValidateUserService {
 	return ValidateUserService{
 		UserRepository: UserRepository,
 		eventBus:       eventBus,

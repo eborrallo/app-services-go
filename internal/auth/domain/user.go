@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"app-services-go/internal/auth/domain/events"
+	"app-services-go/kit/crypt"
 	"app-services-go/kit/event"
 
 	"github.com/google/uuid"
@@ -56,11 +57,13 @@ func NewUser(id, name, email, password string) (User, error) {
 		return User{}, err
 	}
 
+	encodePassword := crypt.Md5(password)
+
 	User := User{
 		ID:        idVO,
 		Name:      name,
 		Email:     email,
-		Password:  password,
+		Password:  encodePassword,
 		Validated: false,
 	}
 	User.Record(events.NewUserCreatedEvent(idVO, name, email, password))
@@ -77,7 +80,16 @@ func (c *User) Validate() {
 	c.Validated = true
 	c.Record(events.NewUserValidatedEvent(c.ID, c.Name, c.Email))
 
-} // Record records a new domain event.
+}
+
+// Record records a new domain event.
+func (c *User) UpdatePassword(newPassword string) {
+	encodePassword := crypt.Md5(newPassword)
+	c.Password = encodePassword
+	c.Record(events.NewUserPasswordChangedEvent(c.ID, c.Email, encodePassword))
+}
+
+// Record records a new domain event.
 func (c *User) Login(token, refreshToken string) {
 	c.AccessToken = token
 	c.RefreshToken = refreshToken

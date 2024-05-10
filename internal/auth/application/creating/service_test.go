@@ -42,7 +42,7 @@ func Test_UserService_CreateUser_EventsBusError(t *testing.T) {
 
 	userRepositoryMock := new(storagemocks.UserRepository)
 	userRepositoryMock.On("Save", mock.Anything, mock.MatchedBy(func(user user.User) bool {
-		return user.ID == userID && user.Name == userName && user.Email == userEmail && crypt.Compare(userPassword, user.Password)
+		return user.ID == userID && user.Name == userName && user.Email == userEmail && crypt.Md5(userPassword) == user.Password
 	})).Return(nil)
 	eventBusMock := new(eventmocks.Bus)
 	eventBusMock.On("Publish", mock.Anything, mock.AnythingOfType("[]event.Event")).Return(errors.New("something unexpected happened"))
@@ -63,7 +63,7 @@ func Test_UserService_CreateUser_Succeed(t *testing.T) {
 	userPassword := "123123"
 	userRepositoryMock := new(storagemocks.UserRepository)
 	userRepositoryMock.On("Save", mock.Anything, mock.MatchedBy(func(user user.User) bool {
-		return user.ID == userID && user.Name == userName && user.Email == userEmail && crypt.Compare(userPassword, user.Password)
+		return user.ID == userID && user.Name == userName && user.Email == userEmail && crypt.Md5(userPassword) == user.Password
 	})).Return(nil)
 
 	eventBusMock := new(eventmocks.Bus)

@@ -3,6 +3,7 @@ package mysql
 import (
 	"app-services-go/configs"
 	user "app-services-go/internal/auth/domain"
+	"app-services-go/kit/crypt"
 	"context"
 	"errors"
 	"testing"
@@ -22,7 +23,7 @@ func Test_UserRepository_Save_RepositoryError(t *testing.T) {
 
 	sqlMock.ExpectExec(
 		"INSERT INTO users (id, name, email, password, validated) VALUES (?, ?, ?, ?, ?)").
-		WithArgs(userID, userName, userEmail, userPassword, false).
+		WithArgs(userID, userName, userEmail, crypt.Md5(userPassword), false).
 		WillReturnError(errors.New("something-failed"))
 	c, _ := configs.GetDatabaseConfig()
 	repo := NewUserRepository(db, c)
@@ -44,7 +45,7 @@ func Test_UserRepository_Save_Succeed(t *testing.T) {
 
 	sqlMock.ExpectExec(
 		"INSERT INTO users (id, name, email, password, validated) VALUES (?, ?, ?, ?, ?)").
-		WithArgs(userID, userName, userEmail, userPassword, false).
+		WithArgs(userID, userName, userEmail, crypt.Md5(userPassword), false).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 	c, _ := configs.GetDatabaseConfig()
 

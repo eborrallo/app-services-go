@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 )
 
-const UserLoggedEventType event.Type = "events.user.created"
+const UserLoggedEventType event.Type = "events.user.logged"
 
 type UserLoggedEvent struct {
 	event.BaseEvent

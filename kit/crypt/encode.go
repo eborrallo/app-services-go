@@ -4,14 +4,20 @@ import (
 	"app-services-go/configs"
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/md5"
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"io"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
+func Md5(txt string) string {
+	hash := md5.Sum([]byte(txt))
+	return hex.EncodeToString(hash[:])
+}
 func Encode(txt string) (string, error) {
 
 	txtEncoded, error := bcrypt.GenerateFromPassword([]byte(txt), bcrypt.MinCost)
