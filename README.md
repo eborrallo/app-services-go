@@ -29,8 +29,6 @@ We have the following endpoints using REST API:
 - [GET] /api/auth/validate/:token : This endpoint is used to validate a user's email address. It expects a token as a URL parameter. Upon successful validation, it returns a response with the user's information.
 - [POST] /api/auth/login : This endpoint is used to log in a user. It expects a JSON payload with the user's email and password. Upon successful login, it returns a response with the user's information and a JWT token.
 
-Example request payload:
-
 Run:
 ```bash
 air
