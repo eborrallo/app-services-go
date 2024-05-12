@@ -38,16 +38,29 @@ Grpc services:
 
 ## Todo
 
-- [x] Auth Service
+- [x] WEB-2 Auth Service
     - [x] REST API
     - [x] Tests
-    - [x] Docker
     - [x] JWT
     - [x] Domain Events
     - [x] Email Validation 
-    - [ ] Forgot Password
-    - [ ] Refresh Token
-
+    - [x] Forgot Password
+    - [x] Refresh Token
+    - [ ] Middleware
+- [x] WEB-3 Auth Service
+    - [x] REST API
+    - [x] Tests
+    - [x] JWT
+    - [x] Domain Events
+    - [x] Integrate go-ethereum
+    - [x] Validate signature
+    - [x] Integrate Reddis
+    - [ ] Middleware
+- [x] Integrate Domain events RabbitMq bus
+- [x] Docker
+- [ ] UI
+    - [ ] Web3 Auth Service
+    - [ ] Web2 Auth Service
 ***
 
 ## Docker
