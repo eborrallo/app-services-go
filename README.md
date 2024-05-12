@@ -1,33 +1,34 @@
-# Services in Go
+# Go Services Implementation
 
 <p align="center">
-<img src="https://external-preview.redd.it/creating-a-more-sustainable-model-for-oapi-codegen-in-the-v0-grxYBfrB_TY75WBP_OwdunQQkWeXgRpOCdwti_qRaGA.jpg?auto=webp&s=ee0a2ee35e1b55a3f70f7d0d3a57b07fd527720b" align="center"
-alt="golang-logo"></p>
+    <img src="https://external-preview.redd.it/creating-a-more-sustainable-model-for-oapi-codegen-in-the-v0-grxYBfrB_TY75WBP_OwdunQQkWeXgRpOCdwti_qRaGA.jpg?auto=webp&s=ee0a2ee35e1b55a3f70f7d0d3a57b07fd527720b" align="center" alt="golang-logo">
+</p>
 
-> ⚠️ IMPORTANT NOTE:
->The main goal of this project is how to implement different services in golang in a single repo (Monolit)
-but with a clear structure and a good practices to split it in Microservices if was necessary . Some of the services are not already finalized, because in a real project the implementation part
-will change to much and the idea is to do only the common part here but the main idea is to show how to implement it.
+> ⚠️ **IMPORTANT NOTE:**
+> The primary aim of this project is to demonstrate the implementation of various services in Go within a single repository (Monolith), while adhering to clear structure and good practices that facilitate splitting into Microservices if necessary. Some services are not finalized as the implementation details may vary significantly in real-world scenarios. However, the core objective is to illustrate common implementation approaches.
 
-The architecture chose and implemented here was DDD  (Domain Driven Design) with a CQRS pattern (Command Query Responsibility Segregation) and Event Sourcing.
-If you know DDD the scaffolding of the project will be very familiar to you. If not I will recommend you to read about it
-before to continue with this project.
+The architecture adopted and implemented here follows Domain Driven Design (DDD) with a CQRS pattern (Command Query Responsibility Segregation) and Event Sourcing. Familiarity with DDD will ease understanding the project structure. If unfamiliar, it's recommended to explore DDD before proceeding.
 
-Quick list of the stack used in this project:
+Quick overview of the technology stack used:
 
-Golang, RabbitMQ , Redis , MySql
+- Golang
+- RabbitMQ
+- Redis
+- MySQL
+
 ***
 
-## What services we have here?
+## Services Overview
 
-- **Auth Service**: This service is responsible to manage the users and the authentication process
+- **Auth Service**: Responsible for user management and authentication processes.
 
 ## Auth Service
-This main porpouse of this service is had all the users and the clasic authentication proces login , forgot , email validations ... , also has a DomainEvent to notify the other services when a user is created or token updated or user validated .All the persistence is done with a Mysql  database.
-We have the following endpoints using REST API:
-- [POST] /api/auth/user : This endpoint is used to create a new user. It expects a JSON payload with the user details. Upon successful creation, it returns a response with the created user's information.
-- [GET] /api/auth/validate/:token : This endpoint is used to validate a user's email address. It expects a token as a URL parameter. Upon successful validation, it returns a response with the user's information.
-- [POST] /api/auth/login : This endpoint is used to log in a user. It expects a JSON payload with the user's email and password. Upon successful login, it returns a response with the user's information and a JWT token.
+
+The Auth Service primarily manages user-related functionalities such as user creation, authentication (login), password recovery, and email validation. It incorporates Domain Events to notify other services about user-related events. Persistence is handled using a MySQL database. The service exposes the following REST API endpoints:
+
+- [POST] `/api/auth/user`: Creates a new user. Expects a JSON payload with user details. Upon success, returns user information.
+- [GET] `/api/auth/validate/:token`: Validates a user's email address using a token provided as a URL parameter. Returns user information upon successful validation.
+- [POST] `/api/auth/login`: Logs in a user. Expects a JSON payload with email and password. Returns user information and a JWT token upon successful login.
 
 Run:
 ```bash
