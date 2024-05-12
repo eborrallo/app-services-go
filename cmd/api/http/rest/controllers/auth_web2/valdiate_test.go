@@ -1,4 +1,4 @@
-package auth
+package auth_web2
 
 import (
 	"net/http"

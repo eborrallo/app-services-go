@@ -1,4 +1,4 @@
-package auth
+package auth_web2
 
 import (
 	"app-services-go/internal/auth/application/creating"

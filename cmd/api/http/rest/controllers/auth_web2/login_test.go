@@ -1,4 +1,4 @@
-package auth
+package auth_web2
 
 import (
 	"bytes"
@@ -18,24 +18,24 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestHandler_Forgot_ServiceError(t *testing.T) {
+func TestHandler_Login_ServiceError(t *testing.T) {
 	commandBus := new(commandmocks.Bus)
 	queryBus := new(querymocks.Bus)
 
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
-	r.POST("/forgot", ForgotHandler(commandBus, queryBus))
+	r.POST("/login", LoginHandler(commandBus, queryBus))
 
-	t.Run("given an invalid email it returns 400", func(t *testing.T) {
+	t.Run("given an invalid request it returns 400", func(t *testing.T) {
 
-		forgotReq := forgotRequest{
-			Email: "",
+		loginReq := loginRequest{
+			Password: "123",
 		}
 
-		b, err := json.Marshal(forgotReq)
+		b, err := json.Marshal(loginReq)
 		require.NoError(t, err)
 
-		req, err := http.NewRequest(http.MethodPost, "/forgot", bytes.NewBuffer(b))
+		req, err := http.NewRequest(http.MethodPost, "/login", bytes.NewBuffer(b))
 		require.NoError(t, err)
 
 		rec := httptest.NewRecorder()
@@ -46,7 +46,6 @@ func TestHandler_Forgot_ServiceError(t *testing.T) {
 
 		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 	})
-
 	t.Run("given an invalid email it returns 400", func(t *testing.T) {
 		queryBus.On(
 			"Ask",
@@ -54,14 +53,15 @@ func TestHandler_Forgot_ServiceError(t *testing.T) {
 			mock.AnythingOfType("fetching.UserByEmailQuery"),
 		).Return(nil, errors.New("something unexpected happened")).Once()
 
-		forgotReq := forgotRequest{
-			Email: "aaa@aa.com",
+		loginReq := loginRequest{
+			Email:    "aaa@aa.com",
+			Password: "123",
 		}
 
-		b, err := json.Marshal(forgotReq)
+		b, err := json.Marshal(loginReq)
 		require.NoError(t, err)
 
-		req, err := http.NewRequest(http.MethodPost, "/forgot", bytes.NewBuffer(b))
+		req, err := http.NewRequest(http.MethodPost, "/login", bytes.NewBuffer(b))
 		require.NoError(t, err)
 
 		rec := httptest.NewRecorder()
@@ -73,7 +73,7 @@ func TestHandler_Forgot_ServiceError(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 	})
 
-	t.Run("given an error new forgot it returns 400", func(t *testing.T) {
+	t.Run("given an error new login it returns 400", func(t *testing.T) {
 		queryBus.On(
 			"Ask",
 			mock.Anything,
@@ -82,17 +82,18 @@ func TestHandler_Forgot_ServiceError(t *testing.T) {
 		commandBus.On(
 			"Dispatch",
 			mock.Anything,
-			mock.AnythingOfType("forgot.ForgotCommand"),
+			mock.AnythingOfType("login.LoginCommand"),
 		).Return(errors.New("something unexpected happened")).Once()
 
-		forgotReq := forgotRequest{
-			Email: "aaa@aa.com",
+		loginReq := loginRequest{
+			Email:    "aaa@aa.com",
+			Password: "123",
 		}
 
-		b, err := json.Marshal(forgotReq)
+		b, err := json.Marshal(loginReq)
 		require.NoError(t, err)
 
-		req, err := http.NewRequest(http.MethodPost, "/forgot", bytes.NewBuffer(b))
+		req, err := http.NewRequest(http.MethodPost, "/login", bytes.NewBuffer(b))
 		require.NoError(t, err)
 
 		rec := httptest.NewRecorder()
@@ -108,25 +109,23 @@ func TestHandler_Forgot_ServiceError(t *testing.T) {
 		commandBus.On(
 			"Dispatch",
 			mock.Anything,
-			mock.AnythingOfType("forgot.ForgotCommand"),
+			mock.AnythingOfType("login.LoginCommand"),
 		).Return(nil).Once()
 		queryBus.On(
 			"Ask",
 			mock.Anything,
 			mock.AnythingOfType("fetching.UserByEmailQuery"),
-		).Return(domain.User{
-			ID:    "123",
-			Email: "aaa@gmail.com",
-		}, nil).Once()
+		).Return(domain.User{}, nil).Once()
 
-		forgotReq := forgotRequest{
-			Email: "aaa@aa.com",
+		loginReq := loginRequest{
+			Email:    "aaa@aa.com",
+			Password: "123",
 		}
 
-		b, err := json.Marshal(forgotReq)
+		b, err := json.Marshal(loginReq)
 		require.NoError(t, err)
 
-		req, err := http.NewRequest(http.MethodPost, "/forgot", bytes.NewBuffer(b))
+		req, err := http.NewRequest(http.MethodPost, "/login", bytes.NewBuffer(b))
 		require.NoError(t, err)
 
 		rec := httptest.NewRecorder()

@@ -13,14 +13,16 @@ type UserCreatedEvent struct {
 	Name     string `json:"name"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
+	Address  string `json:"address"`
 }
 
-func NewUserCreatedEvent(id, name, email, password string) UserCreatedEvent {
+func NewUserCreatedEvent(id string, name string, email string, password string, address string) UserCreatedEvent {
 	return UserCreatedEvent{
 		Id:       id,
 		Name:     name,
 		Email:    email,
 		Password: password,
+		Address:  address,
 
 		BaseEvent: event.NewBaseEvent(id),
 	}

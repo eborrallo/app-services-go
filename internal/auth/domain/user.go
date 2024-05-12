@@ -33,6 +33,7 @@ type User struct {
 	Name         string `json:"name"`
 	Email        string `json:"email"`
 	Password     string `json:"duration"`
+	Address      string `json:"address"`
 	Validated    bool   `json:"validated"`
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
@@ -46,12 +47,18 @@ type UserRepository interface {
 	Update(ctx context.Context, User User) error
 	FetchById(ctx context.Context, id string) (User, error)
 	FetchByEmail(ctx context.Context, email string) (User, error)
+	FetchByAddress(ctx context.Context, address string) (User, error)
+}
+type UserMessageRepository interface {
+	SaveMessage(address string, message string)
+	GetMessage(address string) (string, error)
 }
 
 //go:generate mockery --case=snake --outpkg=storagemocks --output=../infrastructure/storage/storagemocks --name=UserRepository
+//go:generate mockery --case=snake --outpkg=storagemocks --output=../infrastructure/storage/storagemocks --name=UserMessageRepository
 
 // NewUser creates a new User.
-func NewUser(id, name, email, password string) (User, error) {
+func NewUser(id string, name string, email string, password string) (User, error) {
 	idVO, err := NewUserID(id)
 	if err != nil {
 		return User{}, err
@@ -66,7 +73,23 @@ func NewUser(id, name, email, password string) (User, error) {
 		Password:  encodePassword,
 		Validated: false,
 	}
-	User.Record(events.NewUserCreatedEvent(idVO, name, email, password))
+	User.Record(events.NewUserCreatedEvent(idVO, name, email, password, ""))
+	return User, nil
+}
+func NewWeb3User(id string, address string, token string, refreshToken string) (User, error) {
+	idVO, err := NewUserID(id)
+	if err != nil {
+		return User{}, err
+	}
+
+	User := User{
+		ID:           idVO,
+		Address:      address,
+		Validated:    true,
+		AccessToken:  token,
+		RefreshToken: refreshToken,
+	}
+	User.Record(events.NewUserCreatedEvent(idVO, "", "", "", address))
 	return User, nil
 }
 

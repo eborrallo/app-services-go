@@ -111,3 +111,25 @@ func (r *UserRepository) FetchById(ctx context.Context, id string) (user.User, e
 
 	return entity, nil
 }
+
+func (r *UserRepository) FetchByAddress(ctx context.Context, address string) (user.User, error) {
+
+	var entity user.User
+
+	sb := sqlbuilder.NewSelectBuilder()
+	sb.Select("*")
+	sb.From("users")
+	sb.Where(sb.Equal("Address", address))
+
+	query, args := sb.Build()
+
+	ctxTimeout, cancel := context.WithTimeout(ctx, r.dbTimeout)
+	defer cancel()
+
+	err := r.db.QueryRowContext(ctxTimeout, query, args...).Scan(&entity.ID, &entity.Name, &entity.Email, &entity.Password)
+	if err != nil {
+		return user.User{}, fmt.Errorf("error trying to fetch user %s on database: %v", address, err)
+	}
+
+	return entity, nil
+}

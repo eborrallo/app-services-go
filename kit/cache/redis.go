@@ -44,6 +44,7 @@ func (r *RedisCache) Get(key Key) ([]byte, error) {
 
 // Set stores a value for a given key in the cache.
 func (r *RedisCache) Set(key Key, value Value) {
+
 	jsonValue, _ := json.Marshal(value)
 	r.client.Set(context.Background(), string(key), jsonValue, r.duration)
 }

@@ -1,4 +1,4 @@
-package auth
+package auth_web2
 
 import (
 	"bytes"
@@ -7,9 +7,11 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"app-services-go/internal/auth/domain"
 	"app-services-go/kit/command/commandmocks"
+	"app-services-go/kit/crypt"
 	"app-services-go/kit/query/querymocks"
 
 	"github.com/gin-gonic/gin"
@@ -18,24 +20,30 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestHandler_Login_ServiceError(t *testing.T) {
+func TestHandler_Refresh_ServiceError(t *testing.T) {
 	commandBus := new(commandmocks.Bus)
 	queryBus := new(querymocks.Bus)
+	user := domain.User{
+		ID:       "8a1c5cdc-ba57-445a-994d-aa412d23723f",
+		Email:    "aaa@gmail.com",
+		Password: "123",
+	}
+	token := crypt.CreateToken(user, 24*time.Hour)
 
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
-	r.POST("/login", LoginHandler(commandBus, queryBus))
+	r.POST("/refresh", RefreshHandler(commandBus, queryBus))
 
 	t.Run("given an invalid request it returns 400", func(t *testing.T) {
 
-		loginReq := loginRequest{
-			Password: "123",
+		loginReq := refreshRequest{
+			RefreshToken: "",
 		}
 
 		b, err := json.Marshal(loginReq)
 		require.NoError(t, err)
 
-		req, err := http.NewRequest(http.MethodPost, "/login", bytes.NewBuffer(b))
+		req, err := http.NewRequest(http.MethodPost, "/refresh", bytes.NewBuffer(b))
 		require.NoError(t, err)
 
 		rec := httptest.NewRecorder()
@@ -46,22 +54,39 @@ func TestHandler_Login_ServiceError(t *testing.T) {
 
 		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 	})
-	t.Run("given an invalid email it returns 400", func(t *testing.T) {
+	t.Run("given an invalid token it returns 400", func(t *testing.T) {
+		loginReq := refreshRequest{
+			RefreshToken: "123",
+		}
+
+		b, err := json.Marshal(loginReq)
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodPost, "/refresh", bytes.NewBuffer(b))
+		require.NoError(t, err)
+
+		rec := httptest.NewRecorder()
+		r.ServeHTTP(rec, req)
+
+		res := rec.Result()
+		defer res.Body.Close()
+
+		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+	})
+	t.Run("given an invalid query it returns 400", func(t *testing.T) {
 		queryBus.On(
 			"Ask",
 			mock.Anything,
-			mock.AnythingOfType("fetching.UserByEmailQuery"),
+			mock.AnythingOfType("fetching.UserByIdQuery"),
 		).Return(nil, errors.New("something unexpected happened")).Once()
 
-		loginReq := loginRequest{
-			Email:    "aaa@aa.com",
-			Password: "123",
+		loginReq := refreshRequest{
+			RefreshToken: token,
 		}
-
 		b, err := json.Marshal(loginReq)
 		require.NoError(t, err)
 
-		req, err := http.NewRequest(http.MethodPost, "/login", bytes.NewBuffer(b))
+		req, err := http.NewRequest(http.MethodPost, "/refresh", bytes.NewBuffer(b))
 		require.NoError(t, err)
 
 		rec := httptest.NewRecorder()
@@ -72,12 +97,11 @@ func TestHandler_Login_ServiceError(t *testing.T) {
 
 		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 	})
-
 	t.Run("given an error new login it returns 400", func(t *testing.T) {
 		queryBus.On(
 			"Ask",
 			mock.Anything,
-			mock.AnythingOfType("fetching.UserByEmailQuery"),
+			mock.AnythingOfType("fetching.UserByIdQuery"),
 		).Return(domain.User{}, nil).Once()
 		commandBus.On(
 			"Dispatch",
@@ -85,15 +109,14 @@ func TestHandler_Login_ServiceError(t *testing.T) {
 			mock.AnythingOfType("login.LoginCommand"),
 		).Return(errors.New("something unexpected happened")).Once()
 
-		loginReq := loginRequest{
-			Email:    "aaa@aa.com",
-			Password: "123",
+		loginReq := refreshRequest{
+			RefreshToken: token,
 		}
 
 		b, err := json.Marshal(loginReq)
 		require.NoError(t, err)
 
-		req, err := http.NewRequest(http.MethodPost, "/login", bytes.NewBuffer(b))
+		req, err := http.NewRequest(http.MethodPost, "/refresh", bytes.NewBuffer(b))
 		require.NoError(t, err)
 
 		rec := httptest.NewRecorder()
@@ -104,8 +127,11 @@ func TestHandler_Login_ServiceError(t *testing.T) {
 
 		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 	})
+	t.Run("given a valid request it returns 200", func(t *testing.T) {
 
-	t.Run("given a valid request it returns 201", func(t *testing.T) {
+		loginReq := refreshRequest{
+			RefreshToken: token,
+		}
 		commandBus.On(
 			"Dispatch",
 			mock.Anything,
@@ -114,18 +140,13 @@ func TestHandler_Login_ServiceError(t *testing.T) {
 		queryBus.On(
 			"Ask",
 			mock.Anything,
-			mock.AnythingOfType("fetching.UserByEmailQuery"),
-		).Return(domain.User{}, nil).Once()
-
-		loginReq := loginRequest{
-			Email:    "aaa@aa.com",
-			Password: "123",
-		}
+			mock.AnythingOfType("fetching.UserByIdQuery"),
+		).Return(user, nil).Once()
 
 		b, err := json.Marshal(loginReq)
 		require.NoError(t, err)
 
-		req, err := http.NewRequest(http.MethodPost, "/login", bytes.NewBuffer(b))
+		req, err := http.NewRequest(http.MethodPost, "/refresh", bytes.NewBuffer(b))
 		require.NoError(t, err)
 
 		rec := httptest.NewRecorder()

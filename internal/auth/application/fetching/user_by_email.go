@@ -7,7 +7,7 @@ import (
 	"errors"
 )
 
-const UserByEmailQueryType query.Type = "query.fetching.user"
+const UserByEmailQueryType query.Type = "query.fetching.user_by_email"
 
 // UserByEmailQuery is the query dispatched to create a new user.
 type UserByEmailQuery struct {
