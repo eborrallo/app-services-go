@@ -47,7 +47,7 @@ Grpc services:
     - [x] Email Validation 
     - [x] Forgot Password
     - [x] Refresh Token
-    - [ ] Middleware
+    - [x] Middleware
 - [x] WEB-3 Auth Service
     - [x] REST API
     - [x] Tests
@@ -56,7 +56,7 @@ Grpc services:
     - [x] Integrate go-ethereum
     - [x] Validate signature
     - [x] Integrate Reddis
-    - [ ] Middleware
+    - [x] Middleware
 - [x] Integrate Domain events RabbitMq bus
 - [x] Docker
 - [ ] UI

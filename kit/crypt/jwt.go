@@ -52,6 +52,13 @@ func VerifyToken(tokenString string) error {
 	if !token.Valid {
 		return fmt.Errorf("invalid token")
 	}
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return fmt.Errorf("failed to parse claims")
+	}
+	if !claims.VerifyExpiresAt(time.Now().Unix(), true) {
+		return fmt.Errorf("token is expired")
+	}
 
 	return nil
 }
@@ -79,6 +86,9 @@ func GetPayloadFromToken(tokenString string, payload interface{}) error {
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
 		return fmt.Errorf("failed to parse claims")
+	}
+	if !claims.VerifyExpiresAt(time.Now().Unix(), true) {
+		return fmt.Errorf("token is expired")
 	}
 
 	payloadJSON, ok := claims["payload"].(string)

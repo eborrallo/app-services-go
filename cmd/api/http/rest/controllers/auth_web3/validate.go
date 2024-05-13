@@ -8,6 +8,7 @@ import (
 	"app-services-go/kit/command"
 	"app-services-go/kit/crypt"
 	"app-services-go/kit/query"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -24,17 +25,22 @@ func ValidateMessageHandler(commandBus command.Bus, queryBus query.Bus) gin.Hand
 
 		var req validateMessaeRequest
 		if err := ctx.BindJSON(&req); err != nil {
+			fmt.Println("1" + err.Error())
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
 		if !blokchain.IsValidEthereumAddress(address) {
+			fmt.Println("Invalid Ethereum address")
+
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Ethereum address"})
 			return
 		}
 
 		user, err := queryBus.Ask(ctx, fetching.NewUserBySignatureQuery(req.Signature, address))
 		if err != nil {
+			fmt.Println("3" + err.Error())
+
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -43,12 +49,16 @@ func ValidateMessageHandler(commandBus command.Bus, queryBus query.Bus) gin.Hand
 		if user == nil {
 			err := commandBus.Dispatch(ctx, creating.NewWeb3UserCommand(address, token, refreshToken))
 			if err != nil {
+				fmt.Println("4" + err.Error())
+
 				ctx.JSON(http.StatusBadRequest, err.Error())
 				return
 			}
 		} else {
 			err = commandBus.Dispatch(ctx, login.NewLoginCommand(token, refreshToken))
 			if err != nil {
+				fmt.Println("5" + err.Error())
+
 				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 				return
 			}

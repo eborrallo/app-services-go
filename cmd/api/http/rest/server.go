@@ -39,6 +39,7 @@ func RegisterRoutes(s *gin.Engine, commandBus command.Bus, queryBus query.Bus, r
 			authApi.POST("/forgot", auth_web2.ForgotHandler(commandBus, queryBus))
 			authApi.POST("/remember/:token", auth_web2.RememberHandler(commandBus))
 			authApi.GET("/message/:address", auth_web3.MessageHandler(commandBus, message_generator.NewMessageGeneratorService()))
+			authApi.POST("/validate/:address", auth_web3.ValidateMessageHandler(commandBus, queryBus))
 		}
 	}
 
