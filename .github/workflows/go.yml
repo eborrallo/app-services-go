@@ -48,3 +48,8 @@ jobs:
         uses: golangci/golangci-lint-action@v6
         with:
           version: v1.64.8
+          # Ratchet: gate lint on changed code only. The repo has a large
+          # pre-existing lint backlog; blocking every PR on the whole backlog is
+          # impractical, so we enforce lint on new/changed lines and clean up the
+          # backlog separately.
+          only-new-issues: true
