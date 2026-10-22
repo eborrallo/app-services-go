@@ -1,7 +1,6 @@
 package blokchain
 
 import (
-	"log"
 	"testing"
 
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -10,11 +9,14 @@ import (
 )
 
 func Test_Blokchain_Verificator_Signature(t *testing.T) {
+	if testing.Short() {
+		t.Skip("needs network")
+	}
 
 	// Connect to Ethereum node
 	client, err := rpc.Dial("https://eth.public-rpc.com")
 	if err != nil {
-		log.Fatal(err)
+		t.Fatal(err)
 	}
 	ethClient := ethclient.NewClient(client)
 

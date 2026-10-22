@@ -10,4 +10,5 @@ type sqlUser struct {
 	Email     string `db:"email"`
 	Password  string `db:"password"`
 	Validated bool   `db:"validated"`
+	Address   string `db:"address"`
 }

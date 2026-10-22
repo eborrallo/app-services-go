@@ -48,9 +48,10 @@ func (h PasswordUserCommandHandler) Handle(ctx context.Context, cmd command.Comm
 		return errors.New("unexpected command")
 	}
 
-	return h.service.UpdatePassword(
-		ctx,
-		crypt.Decrypt(validateUserCmd.Token),
-		validateUserCmd.NewPassword,
-	)
+	token, err := crypt.Decrypt(validateUserCmd.Token)
+	if err != nil {
+		return err
+	}
+
+	return h.service.UpdatePassword(ctx, token, validateUserCmd.NewPassword)
 }

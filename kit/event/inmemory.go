@@ -1,9 +1,19 @@
 package event
 
+import (
+	"context"
+	"errors"
+	"sync"
+)
+
 // EventBus is an in-memory implementation of the Bus.
 type EventBus struct {
+	mu       sync.RWMutex
 	handlers map[Type][]Subscriber
 }
+
+// Ensure *EventBus satisfies the Bus interface.
+var _ Bus = (*EventBus)(nil)
 
 // NewEventBus initializes a new EventBus.
 func NewEventBus() *EventBus {
@@ -13,29 +23,30 @@ func NewEventBus() *EventBus {
 }
 
 // Publish implements the Bus interface.
-func (b *EventBus) Publish(events []Event) error {
+func (b *EventBus) Publish(_ context.Context, events []Event) error {
+	var err error
 	for _, evt := range events {
+		b.mu.RLock()
 		handlers, ok := b.handlers[evt.Type()]
+		b.mu.RUnlock()
 		if !ok {
-			return nil
+			continue
 		}
 
 		for _, handler := range handlers {
-			handler.On(evt)
+			if onErr := handler.On(evt); onErr != nil {
+				err = errors.Join(err, onErr)
+			}
 		}
 	}
 
-	return nil
+	return err
 }
 
 // Subscribe implements the Bus interface.
 func (b *EventBus) Subscribe(handler Subscriber) {
 	evt := handler.SubscribedTo()
-	subscribersForType, ok := b.handlers[evt.Type()]
-	if !ok {
-		b.handlers[evt.Type()] = []Subscriber{handler}
-	}
-
-	subscribersForType = append(subscribersForType, handler)
-
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	b.handlers[evt.Type()] = append(b.handlers[evt.Type()], handler)
 }

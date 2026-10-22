@@ -46,8 +46,10 @@ func (h ValidateUserCommandHandler) Handle(ctx context.Context, cmd command.Comm
 		return errors.New("unexpected command")
 	}
 
-	return h.service.ValidateUser(
-		ctx,
-		crypt.Decrypt(validateUserCmd.Token),
-	)
+	token, err := crypt.Decrypt(validateUserCmd.Token)
+	if err != nil {
+		return err
+	}
+
+	return h.service.ValidateUser(ctx, token)
 }

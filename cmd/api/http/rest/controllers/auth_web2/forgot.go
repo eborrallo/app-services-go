@@ -19,19 +19,24 @@ func ForgotHandler(commandBus command.Bus, queryBus query.Bus) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var req forgotRequest
 		if err := ctx.BindJSON(&req); err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 			return
 		}
 
-		user, err := queryBus.Ask(ctx, fetching.NewUserByEmailQuery(req.Email))
+		result, err := queryBus.Ask(ctx.Request.Context(), fetching.NewUserByEmailQuery(req.Email))
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "could not process request"})
 			return
 		}
 
-		err = commandBus.Dispatch(ctx, forgot.NewForgotCommand(user.(domain.User).ID, user.(domain.User).Email))
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		user, ok := result.(domain.User)
+		if !ok {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "could not process request"})
+			return
+		}
+
+		if err := commandBus.Dispatch(ctx.Request.Context(), forgot.NewForgotCommand(user.ID, user.Email)); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "could not process request"})
 			return
 		}
 

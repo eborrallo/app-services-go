@@ -28,7 +28,9 @@ func (s PasswordUserService) UpdatePassword(ctx context.Context, userId, newPass
 	if err != nil {
 		return err
 	}
-	User.UpdatePassword(newPassword)
+	if err := User.UpdatePassword(newPassword); err != nil {
+		return err
+	}
 
 	if err := s.UserRepository.Update(ctx, User); err != nil {
 		return err

@@ -38,8 +38,21 @@ func (_m *UserMessageRepository) GetMessage(address string) (string, error) {
 }
 
 // SaveMessage provides a mock function with given fields: address, message
-func (_m *UserMessageRepository) SaveMessage(address string, message string) {
-	_m.Called(address, message)
+func (_m *UserMessageRepository) SaveMessage(address string, message string) error {
+	ret := _m.Called(address, message)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SaveMessage")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, string) error); ok {
+		r0 = rf(address, message)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // NewUserMessageRepository creates a new instance of UserMessageRepository. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.

@@ -5,7 +5,7 @@ type Cache interface {
 	// Get Fetch the value of a key.
 	Get(Key) ([]byte, error)
 	// Set Store a value for a key.
-	Set(Key, Value)
+	Set(Key, Value) error
 }
 
 type Key string

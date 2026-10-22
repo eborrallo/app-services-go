@@ -1,7 +1,6 @@
 package increasing
 
 import (
-	"errors"
 	"log"
 )
 
@@ -13,5 +12,5 @@ func NewCourseCounterService() CourseCounterService {
 
 func (s CourseCounterService) Increase(id string) error {
 	log.Println("Increasing course counter for course", id)
-	return errors.New("Drama error")
+	return nil
 }

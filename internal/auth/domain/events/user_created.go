@@ -9,20 +9,18 @@ const UserCreatedEventType event.Type = "events.user.created"
 
 type UserCreatedEvent struct {
 	event.BaseEvent
-	Id       string `json:"id"`
-	Name     string `json:"name"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	Address  string `json:"address"`
+	Id      string `json:"id"`
+	Name    string `json:"name"`
+	Email   string `json:"email"`
+	Address string `json:"address"`
 }
 
-func NewUserCreatedEvent(id string, name string, email string, password string, address string) UserCreatedEvent {
+func NewUserCreatedEvent(id string, name string, email string, address string) UserCreatedEvent {
 	return UserCreatedEvent{
-		Id:       id,
-		Name:     name,
-		Email:    email,
-		Password: password,
-		Address:  address,
+		Id:      id,
+		Name:    name,
+		Email:   email,
+		Address: address,
 
 		BaseEvent: event.NewBaseEvent(id),
 	}
@@ -44,9 +42,6 @@ func (e UserCreatedEvent) UserName() string {
 
 func (e UserCreatedEvent) UserEmail() string {
 	return e.Email
-}
-func (e UserCreatedEvent) UserPassword() string {
-	return e.Password
 }
 func (e UserCreatedEvent) FromJSON(data []byte) (event.Event, error) {
 	user := &UserCreatedEvent{}

@@ -22,7 +22,7 @@ func (e IncreaseCoursesCounterOnCourseCreated) On(evt event.Event) error {
 	if !ok {
 		return errors.New("unexpected event")
 	}
-	return e.increasingService.Increase(courseCreatedEvt.ID())
+	return e.increasingService.Increase(courseCreatedEvt.CourseID())
 }
 
 func (e IncreaseCoursesCounterOnCourseCreated) SubscribedTo() event.Event {

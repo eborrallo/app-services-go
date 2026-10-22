@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 )
 
-const UserValidatedEventType event.Type = "events.user.valdiated"
+const UserValidatedEventType event.Type = "events.user.validated"
 
 type UserValidatedEvent struct {
 	event.BaseEvent

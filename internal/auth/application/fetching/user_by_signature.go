@@ -58,7 +58,7 @@ func (h UserBySignatureQueryHandler) Handle(ctx context.Context, qry query.Query
 	if err != nil {
 		return nil, err
 	}
-	user, err := h.userRepository.FetchByAddress(ctx, userQry.signature)
+	user, err := h.userRepository.FetchByAddress(ctx, userQry.signer)
 	if err != nil {
 		return nil, err
 	}

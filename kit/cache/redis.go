@@ -6,8 +6,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/redis/go-redis/v9"
 	"time"
+
+	"github.com/redis/go-redis/v9"
 )
 
 // RedisCache Cache implements the Cache interface using github.com/go-redis/redis/v9.
@@ -42,9 +43,15 @@ func (r *RedisCache) Get(key Key) ([]byte, error) {
 	return []byte(result), nil
 }
 
-// Set stores a value for a given key in the cache.
-func (r *RedisCache) Set(key Key, value Value) {
-
-	jsonValue, _ := json.Marshal(value)
-	r.client.Set(context.Background(), string(key), jsonValue, r.duration)
+// Set stores a value for a given key in the cache. Both the marshal and the
+// Redis write errors are now surfaced instead of being silently dropped.
+func (r *RedisCache) Set(key Key, value Value) error {
+	jsonValue, err := json.Marshal(value)
+	if err != nil {
+		return fmt.Errorf("error marshalling cache value: %w", err)
+	}
+	if err := r.client.Set(context.Background(), string(key), jsonValue, r.duration).Err(); err != nil {
+		return fmt.Errorf("error writing to redis: %w", err)
+	}
+	return nil
 }

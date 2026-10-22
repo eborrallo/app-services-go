@@ -11,6 +11,9 @@ import (
 
 var ErrInvalidCourseID = errors.New("invalid Course ID")
 
+// ErrCourseNotFound is returned when a course does not exist in the storage.
+var ErrCourseNotFound = errors.New("course not found")
+
 // CourseID represents the course unique identifier.
 
 // NewCourseID instantiate the VO for CourseID
@@ -43,6 +46,9 @@ type CourseDuration struct {
 }
 
 func NewCourseDuration(value string) (string, error) {
+	if value == "" {
+		return "", ErrEmptyDuration
+	}
 
 	return value, nil
 }
@@ -96,7 +102,7 @@ func (c *Course) Record(evt event.Event) {
 }
 
 // PullEvents returns all the recorded domain events.
-func (c Course) PullEvents() []event.Event {
+func (c *Course) PullEvents() []event.Event {
 	evt := c.events
 	c.events = []event.Event{}
 

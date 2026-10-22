@@ -37,7 +37,6 @@ func NewSaveMessageService(userMessageRepository domain.UserMessageRepository, e
 	}
 }
 
-func (s SaveMessageService) Save(address, message string) {
-
-	s.UserMessageRepository.SaveMessage(address, message)
+func (s SaveMessageService) Save(address, message string) error {
+	return s.UserMessageRepository.SaveMessage(address, message)
 }

@@ -20,10 +20,10 @@ type UserMessage struct {
 	Message string
 }
 
-func (r UserMessageRepository) SaveMessage(address string, message string) {
+func (r UserMessageRepository) SaveMessage(address string, message string) error {
 	key := cache.Key(strings.ToLower(address))
 	value := cache.Value(UserMessage{Message: message})
-	r.rd.Set(key, value)
+	return r.rd.Set(key, value)
 }
 
 func (r UserMessageRepository) GetMessage(address string) (string, error) {

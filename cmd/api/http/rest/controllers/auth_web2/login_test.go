@@ -10,6 +10,7 @@ import (
 
 	"app-services-go/internal/auth/domain"
 	"app-services-go/kit/command/commandmocks"
+	"app-services-go/kit/crypt"
 	"app-services-go/kit/query/querymocks"
 
 	"github.com/gin-gonic/gin"
@@ -19,8 +20,21 @@ import (
 )
 
 func TestHandler_Login_ServiceError(t *testing.T) {
+	// crypt.CreateToken reads the required SECRET; set it before any token work.
+	t.Setenv("SECRET", "test-secret-0123456789")
+
 	commandBus := new(commandmocks.Bus)
 	queryBus := new(querymocks.Bus)
+
+	// The fetched user carries a real bcrypt hash of the test password so that
+	// crypt.Compare succeeds on the happy path.
+	hashedPassword, err := crypt.Encode("123")
+	require.NoError(t, err)
+	matchingUser := domain.User{
+		ID:       "8a1c5cdc-ba57-445a-994d-aa412d23723f",
+		Email:    "aaa@gmail.com",
+		Password: hashedPassword,
+	}
 
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
@@ -46,7 +60,7 @@ func TestHandler_Login_ServiceError(t *testing.T) {
 
 		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 	})
-	t.Run("given an invalid email it returns 400", func(t *testing.T) {
+	t.Run("given a failed user lookup it returns 401", func(t *testing.T) {
 		queryBus.On(
 			"Ask",
 			mock.Anything,
@@ -70,15 +84,42 @@ func TestHandler_Login_ServiceError(t *testing.T) {
 		res := rec.Result()
 		defer res.Body.Close()
 
-		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+		assert.Equal(t, http.StatusUnauthorized, res.StatusCode)
 	})
 
-	t.Run("given an error new login it returns 400", func(t *testing.T) {
+	t.Run("given a wrong password it returns 401", func(t *testing.T) {
 		queryBus.On(
 			"Ask",
 			mock.Anything,
 			mock.AnythingOfType("fetching.UserByEmailQuery"),
-		).Return(domain.User{}, nil).Once()
+		).Return(matchingUser, nil).Once()
+
+		loginReq := loginRequest{
+			Email:    "aaa@aa.com",
+			Password: "wrong-password",
+		}
+
+		b, err := json.Marshal(loginReq)
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(http.MethodPost, "/login", bytes.NewBuffer(b))
+		require.NoError(t, err)
+
+		rec := httptest.NewRecorder()
+		r.ServeHTTP(rec, req)
+
+		res := rec.Result()
+		defer res.Body.Close()
+
+		assert.Equal(t, http.StatusUnauthorized, res.StatusCode)
+	})
+
+	t.Run("given a login dispatch error it returns 500", func(t *testing.T) {
+		queryBus.On(
+			"Ask",
+			mock.Anything,
+			mock.AnythingOfType("fetching.UserByEmailQuery"),
+		).Return(matchingUser, nil).Once()
 		commandBus.On(
 			"Dispatch",
 			mock.Anything,
@@ -102,10 +143,10 @@ func TestHandler_Login_ServiceError(t *testing.T) {
 		res := rec.Result()
 		defer res.Body.Close()
 
-		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+		assert.Equal(t, http.StatusInternalServerError, res.StatusCode)
 	})
 
-	t.Run("given a valid request it returns 201", func(t *testing.T) {
+	t.Run("given a valid request it returns 200", func(t *testing.T) {
 		commandBus.On(
 			"Dispatch",
 			mock.Anything,
@@ -115,7 +156,7 @@ func TestHandler_Login_ServiceError(t *testing.T) {
 			"Ask",
 			mock.Anything,
 			mock.AnythingOfType("fetching.UserByEmailQuery"),
-		).Return(domain.User{}, nil).Once()
+		).Return(matchingUser, nil).Once()
 
 		loginReq := loginRequest{
 			Email:    "aaa@aa.com",

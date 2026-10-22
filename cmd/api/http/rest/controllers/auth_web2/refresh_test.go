@@ -21,6 +21,9 @@ import (
 )
 
 func TestHandler_Refresh_ServiceError(t *testing.T) {
+	// crypt.CreateToken/GetPayloadFromToken need the required SECRET.
+	t.Setenv("SECRET", "test-secret-0123456789")
+
 	commandBus := new(commandmocks.Bus)
 	queryBus := new(querymocks.Bus)
 	user := domain.User{
@@ -28,7 +31,8 @@ func TestHandler_Refresh_ServiceError(t *testing.T) {
 		Email:    "aaa@gmail.com",
 		Password: "123",
 	}
-	token := crypt.CreateToken(user, 24*time.Hour)
+	token, err := crypt.CreateToken(user, 24*time.Hour)
+	require.NoError(t, err)
 
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
@@ -54,7 +58,7 @@ func TestHandler_Refresh_ServiceError(t *testing.T) {
 
 		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 	})
-	t.Run("given an invalid token it returns 400", func(t *testing.T) {
+	t.Run("given an invalid token it returns 401", func(t *testing.T) {
 		loginReq := refreshRequest{
 			RefreshToken: "123",
 		}
@@ -71,9 +75,9 @@ func TestHandler_Refresh_ServiceError(t *testing.T) {
 		res := rec.Result()
 		defer res.Body.Close()
 
-		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+		assert.Equal(t, http.StatusUnauthorized, res.StatusCode)
 	})
-	t.Run("given an invalid query it returns 400", func(t *testing.T) {
+	t.Run("given an invalid query it returns 401", func(t *testing.T) {
 		queryBus.On(
 			"Ask",
 			mock.Anything,
@@ -95,9 +99,9 @@ func TestHandler_Refresh_ServiceError(t *testing.T) {
 		res := rec.Result()
 		defer res.Body.Close()
 
-		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+		assert.Equal(t, http.StatusUnauthorized, res.StatusCode)
 	})
-	t.Run("given an error new login it returns 400", func(t *testing.T) {
+	t.Run("given a login dispatch error it returns 500", func(t *testing.T) {
 		queryBus.On(
 			"Ask",
 			mock.Anything,
@@ -125,7 +129,7 @@ func TestHandler_Refresh_ServiceError(t *testing.T) {
 		res := rec.Result()
 		defer res.Body.Close()
 
-		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+		assert.Equal(t, http.StatusInternalServerError, res.StatusCode)
 	})
 	t.Run("given a valid request it returns 200", func(t *testing.T) {
 

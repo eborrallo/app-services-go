@@ -5,7 +5,9 @@ import (
 )
 
 type CryptConfig struct {
-	Secret string `default:"0123456789abcdef"`
+	// Secret is required: there is deliberately no default, so a missing SECRET
+	// fails fast instead of silently running on a public, hard-coded key.
+	Secret string `required:"true"`
 }
 
 func GetCryptConfig() (CryptConfig, error) {

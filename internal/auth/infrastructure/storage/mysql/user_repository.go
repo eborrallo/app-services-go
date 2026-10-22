@@ -5,11 +5,16 @@ import (
 	user "app-services-go/internal/auth/domain"
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/huandu/go-sqlbuilder"
 )
+
+// userColumns is the explicit column list, matching the Scan order below. Never
+// use SELECT * with a partial Scan: it breaks the moment the table changes.
+var userColumns = []string{"id", "name", "email", "password", "validated", "address"}
 
 // UserRepository is a MySQL user.UserRepository implementation.
 type UserRepository struct {
@@ -25,111 +30,82 @@ func NewUserRepository(db *sql.DB, configs configs.DatabaseConfig) *UserReposito
 	}
 }
 
+func toSQLUser(u user.User) sqlUser {
+	return sqlUser{
+		ID:        u.ID,
+		Name:      u.Name,
+		Email:     u.Email,
+		Password:  u.Password,
+		Validated: u.Validated,
+		Address:   u.Address,
+	}
+}
+
 // Save implements the user.UserRepository interface.
-func (r *UserRepository) Save(ctx context.Context, user user.User) error {
+func (r *UserRepository) Save(ctx context.Context, u user.User) error {
 	userSQLStruct := sqlbuilder.NewStruct(new(sqlUser))
-	query, args := userSQLStruct.InsertInto(sqlUserTable, sqlUser{
-		ID:       user.ID,
-		Name:     user.Name,
-		Email:    user.Email,
-		Password: user.Password,
-	}).Build()
+	query, args := userSQLStruct.InsertInto(sqlUserTable, toSQLUser(u)).Build()
 
 	ctxTimeout, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	_, err := r.db.ExecContext(ctxTimeout, query, args...)
-	if err != nil {
-		return fmt.Errorf("error trying to persist user on database: %v", err)
+	if _, err := r.db.ExecContext(ctxTimeout, query, args...); err != nil {
+		return fmt.Errorf("error trying to persist user on database: %w", err)
 	}
 
 	return nil
 }
 
 // Update implements the user.UserRepository interface.
-func (r *UserRepository) Update(ctx context.Context, user user.User) error {
+func (r *UserRepository) Update(ctx context.Context, u user.User) error {
 	userSQLStruct := sqlbuilder.NewStruct(new(sqlUser))
-	query, args := userSQLStruct.Update(sqlUserTable, sqlUser{
-		ID:        user.ID,
-		Name:      user.Name,
-		Email:     user.Email,
-		Password:  user.Password,
-		Validated: user.Validated,
-	}).Where(fmt.Sprintf("ID = %s", user.ID)).Build()
+	ub := userSQLStruct.Update(sqlUserTable, toSQLUser(u))
+	// Parametrized predicate: no more fmt.Sprintf into the SQL string.
+	ub.Where(ub.Equal("id", u.ID))
+	query, args := ub.Build()
 
 	ctxTimeout, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	_, err := r.db.ExecContext(ctxTimeout, query, args...)
-	if err != nil {
-		return fmt.Errorf("error trying to persist user on database: %v", err)
+	if _, err := r.db.ExecContext(ctxTimeout, query, args...); err != nil {
+		return fmt.Errorf("error trying to update user on database: %w", err)
 	}
 
 	return nil
 }
 
-func (r *UserRepository) FetchByEmail(ctx context.Context, email string) (user.User, error) {
-
-	var entity user.User
-
+func (r *UserRepository) fetchBy(ctx context.Context, column, value string) (user.User, error) {
 	sb := sqlbuilder.NewSelectBuilder()
-	sb.Select("*")
-	sb.From("users")
-	sb.Where(sb.Equal("Email", email))
+	sb.Select(userColumns...)
+	sb.From(sqlUserTable)
+	sb.Where(sb.Equal(column, value))
 
 	query, args := sb.Build()
 
 	ctxTimeout, cancel := context.WithTimeout(ctx, r.dbTimeout)
 	defer cancel()
 
-	err := r.db.QueryRowContext(ctxTimeout, query, args...).Scan(&entity.ID, &entity.Name, &entity.Email, &entity.Password)
+	var entity user.User
+	err := r.db.QueryRowContext(ctxTimeout, query, args...).
+		Scan(&entity.ID, &entity.Name, &entity.Email, &entity.Password, &entity.Validated, &entity.Address)
+	if errors.Is(err, sql.ErrNoRows) {
+		return user.User{}, user.ErrUserNotFound
+	}
 	if err != nil {
-		return user.User{}, fmt.Errorf("error trying to fetch user %s on database: %v", email, err)
+		return user.User{}, fmt.Errorf("error trying to fetch user %s on database: %w", value, err)
 	}
 
 	return entity, nil
+}
+
+func (r *UserRepository) FetchByEmail(ctx context.Context, email string) (user.User, error) {
+	return r.fetchBy(ctx, "email", email)
 }
 
 func (r *UserRepository) FetchById(ctx context.Context, id string) (user.User, error) {
-
-	var entity user.User
-
-	sb := sqlbuilder.NewSelectBuilder()
-	sb.Select("*")
-	sb.From("users")
-	sb.Where(sb.Equal("Id", id))
-
-	query, args := sb.Build()
-
-	ctxTimeout, cancel := context.WithTimeout(ctx, r.dbTimeout)
-	defer cancel()
-
-	err := r.db.QueryRowContext(ctxTimeout, query, args...).Scan(&entity.ID, &entity.Name, &entity.Email, &entity.Password)
-	if err != nil {
-		return user.User{}, fmt.Errorf("error trying to fetch user %s on database: %v", id, err)
-	}
-
-	return entity, nil
+	return r.fetchBy(ctx, "id", id)
 }
 
 func (r *UserRepository) FetchByAddress(ctx context.Context, address string) (user.User, error) {
-
-	var entity user.User
-
-	sb := sqlbuilder.NewSelectBuilder()
-	sb.Select("*")
-	sb.From("users")
-	sb.Where(sb.Equal("Address", address))
-
-	query, args := sb.Build()
-
-	ctxTimeout, cancel := context.WithTimeout(ctx, r.dbTimeout)
-	defer cancel()
-
-	err := r.db.QueryRowContext(ctxTimeout, query, args...).Scan(&entity.ID, &entity.Name, &entity.Email, &entity.Password)
-	if err != nil {
-		return user.User{}, fmt.Errorf("error trying to fetch user %s on database: %v", address, err)
-	}
-
-	return entity, nil
+	return r.fetchBy(ctx, "address", address)
 }

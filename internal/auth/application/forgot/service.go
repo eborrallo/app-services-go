@@ -1,9 +1,9 @@
 package forgot
 
 import (
-	"app-services-go/internal/auth/domain"
 	"context"
 
+	"app-services-go/internal/auth/domain"
 	"app-services-go/kit/crypt"
 )
 
@@ -20,8 +20,10 @@ func NewForgotUserService(sender domain.Sender) ForgotUserService {
 
 // ForgotUser implements the creating.ForgotUserService interface.
 func (s ForgotUserService) SendForgotEmail(ctx context.Context, userId, userEmail string) error {
-	token := crypt.Encrypt(userId)
+	token, err := crypt.Encrypt(userId)
+	if err != nil {
+		return err
+	}
 
-	s.Sender.Send(userEmail, "Forgot password "+token)
-	return nil
+	return s.Sender.Send(userEmail, "Forgot password "+token)
 }

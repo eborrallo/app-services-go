@@ -13,7 +13,7 @@ type UserLoggedEvent struct {
 	Name         string `json:"name"`
 	Email        string `json:"email"`
 	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"regresh_token"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 func NewUserLoggedEvent(id, name, email, access_token, refresh_token string) UserLoggedEvent {
@@ -21,7 +21,7 @@ func NewUserLoggedEvent(id, name, email, access_token, refresh_token string) Use
 		Id:           id,
 		Name:         name,
 		Email:        email,
-		AccessToken:  email,
+		AccessToken:  access_token,
 		RefreshToken: refresh_token,
 
 		BaseEvent: event.NewBaseEvent(id),

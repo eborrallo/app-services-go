@@ -19,6 +19,9 @@ import (
 )
 
 func TestHandler_ValdiateUser(t *testing.T) {
+	// crypt.CreateToken needs the required SECRET.
+	t.Setenv("SECRET", "test-secret-0123456789")
+
 	commandBus := new(commandmocks.Bus)
 	queryBus := new(querymocks.Bus)
 
@@ -118,11 +121,13 @@ func TestHandler_ValdiateUser(t *testing.T) {
 	})
 
 	t.Run("given an non existing user update tokens and returns 200", func(t *testing.T) {
+		// A verified signature with no matching user (ErrUserNotFound) is a new
+		// web3 user, which triggers the create-user command.
 		queryBus.On(
 			"Ask",
 			mock.Anything,
 			mock.AnythingOfType("fetching.UserBySignatureQuery"),
-		).Return(nil, nil).Once()
+		).Return(nil, domain.ErrUserNotFound).Once()
 
 		commandBus.On(
 			"Dispatch",

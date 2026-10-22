@@ -1,6 +1,7 @@
 package auth_web2
 
 import (
+	"encoding/base64"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -16,6 +17,9 @@ import (
 )
 
 func TestHandler_ValdiateUser(t *testing.T) {
+	// crypt.Encrypt needs the required SECRET.
+	t.Setenv("SECRET", "test-secret-0123456789")
+
 	commandBus := new(commandmocks.Bus)
 
 	gin.SetMode(gin.TestMode)
@@ -38,12 +42,17 @@ func TestHandler_ValdiateUser(t *testing.T) {
 
 	t.Run("given a valid request it returns 200", func(t *testing.T) {
 		userId := "8a1c5cdc-ba57-445a-994d-aa412d23723f"
-		encryptedId := crypt.Encrypt(userId)
+		encryptedId, err := crypt.Encrypt(userId)
+		require.NoError(t, err)
+		// The handler base64-decodes the path token and dispatches the DECODED
+		// value, so the command carries the decoded bytes, not the path string.
+		decoded, err := base64.URLEncoding.DecodeString(encryptedId)
+		require.NoError(t, err)
 		commandBus.On(
 			"Dispatch",
 			mock.Anything,
 			mock.MatchedBy(func(cmd validating.ValidateUserCommand) bool {
-				return cmd.Token == encryptedId
+				return cmd.Token == string(decoded)
 			})).Return(nil)
 
 		req, err := http.NewRequest(http.MethodGet, "/validate/"+encryptedId, nil)

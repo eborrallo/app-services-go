@@ -34,7 +34,7 @@ linters-settings:
       - pattern: 'interface{}'
         replacement: 'any'
 
-  gomnd:
+  mnd:
     checks:
       - argument
       - case
@@ -45,11 +45,10 @@ linters-settings:
 
   gosec:
     exclude-generated: true
-    excludes:
-      - G101
 
   govet:
-    check-shadowing: true
+    enable:
+      - shadow
 
   errorlint:
     asserts: false
@@ -81,7 +80,6 @@ linters:
     - dupl
     - errcheck
     - errorlint
-    - exportloopref
     - funlen
     - gocheckcompilerdirectives
     - gochecknoinits
@@ -90,7 +88,7 @@ linters:
     - gocyclo
     - gofmt
     - goimports
-    - gomnd
+    - mnd
     - goprintffuncname
     - gosec
     - gosimple
@@ -115,16 +113,16 @@ linters:
 
 # Issues configuration.
 issues:
+  exclude-files:
+    - '.*_templ\\.go$'
+
   exclude-rules:
     - path: _test\.go
       linters:
-        - gomnd
+        - mnd
 
 # Run configuration.
 run:
   timeout: 5m
   tests: false
-  
-  skip-files:
-    - '.*_templ\\.go$'
-  
+

@@ -10,6 +10,7 @@ import (
 )
 
 func Test_ForgotUserService_Send_Succeed(t *testing.T) {
+	t.Setenv("SECRET", "test-secret-0123456789")
 
 	senderMock := new(smptmocks.Sender)
 	userId := "37a0f027-15e6-47cc-a5d2-64183281087e"

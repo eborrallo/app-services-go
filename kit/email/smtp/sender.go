@@ -14,25 +14,25 @@ func NewSender() Sender {
 	return Sender{}
 }
 
-func (s Sender) Send(email string, content string) {
-
-	config, error := configs.GetSmtpConfig()
-	if error != nil {
-		fmt.Println("Error creating smpt config", error)
-		return
+func (s Sender) Send(email string, content string) error {
+	config, err := configs.GetSmtpConfig()
+	if err != nil {
+		return fmt.Errorf("error creating smtp config: %w", err)
 	}
 
 	// Receiver email address.
 	to := []string{email}
-	// Message.
-	message := []byte(content)
+	// Build a minimal RFC 5322 message so servers don't reject or mangle it.
+	message := []byte(fmt.Sprintf(
+		"From: %s\r\nTo: %s\r\nSubject: %s\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=\"utf-8\"\r\n\r\n%s\r\n",
+		config.Email, email, "Notification", content,
+	))
 	// Authentication.
 	auth := smtp.PlainAuth("", config.Email, config.Password, config.Host)
 	// Sending email.
-	err := smtp.SendMail(config.Host+":"+config.Port, auth, config.Email, to, message)
-	if err != nil {
-		fmt.Println(err)
-		return
+	if err := smtp.SendMail(config.Host+":"+config.Port, auth, config.Email, to, message); err != nil {
+		return fmt.Errorf("error sending email: %w", err)
 	}
-	fmt.Println("Email Sent Successfully!")
+
+	return nil
 }

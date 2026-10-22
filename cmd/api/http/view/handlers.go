@@ -7,13 +7,11 @@ import (
 	"github.com/angelofallars/htmx-go"
 	"github.com/gin-gonic/gin"
 
-    "app-services-go/cmd/api/http/view/templates/pages"
-    "app-services-go/cmd/api/http/view/templates"
+	"app-services-go/cmd/api/http/view/templates"
+	"app-services-go/cmd/api/http/view/templates/pages"
 )
 
 // go run github.com/a-h/templ/cmd/templ@latest generate
-
-
 
 // indexViewHandler handles a view for the index page.
 func indexViewHandler(c *gin.Context) {

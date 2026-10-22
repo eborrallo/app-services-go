@@ -3,8 +3,10 @@ package configs
 import "github.com/kelseyhightower/envconfig"
 
 type SmtpConfig struct {
-	Email    string `default:"test@gmail.com"`
-	Password string `default:"123123"`
+	// Credentials have no defaults on purpose: they must come from the
+	// environment, never be baked into the binary.
+	Email    string `envconfig:"SMTP_EMAIL"`
+	Password string `envconfig:"SMTP_PASSWORD"`
 	Host     string `default:"smtp.gmail.com"`
 	Port     string `default:"587"`
 }

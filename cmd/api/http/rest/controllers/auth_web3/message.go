@@ -23,7 +23,10 @@ func MessageHandler(commandBus command.Bus, messageGeneratorService message_gene
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		commandBus.Dispatch(ctx, message_generator.NewSaveMessageCommand(address, message))
+		if err := commandBus.Dispatch(ctx.Request.Context(), message_generator.NewSaveMessageCommand(address, message)); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "could not save message"})
+			return
+		}
 		ctx.JSON(http.StatusOK, gin.H{
 			"message": message,
 		})

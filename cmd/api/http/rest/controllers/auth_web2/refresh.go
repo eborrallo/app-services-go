@@ -21,28 +21,42 @@ func RefreshHandler(commandBus command.Bus, queryBus query.Bus) gin.HandlerFunc 
 	return func(ctx *gin.Context) {
 		var req refreshRequest
 		if err := ctx.BindJSON(&req); err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		tokenUser := domain.User{}
-		err := crypt.GetPayloadFromToken(req.RefreshToken, &tokenUser)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 			return
 		}
 
-		user, err := queryBus.Ask(ctx, fetching.NewUserByIdQuery(tokenUser.ID))
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		var payload domain.TokenPayload
+		if err := crypt.GetPayloadFromToken(req.RefreshToken, &payload); err != nil {
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired token"})
 			return
 		}
 
-		token := crypt.CreateToken(user, 24*time.Hour)
-		refreshToken := crypt.CreateToken(user, 30*24*time.Hour)
-
-		err = commandBus.Dispatch(ctx, login.NewLoginCommand(token, refreshToken))
+		result, err := queryBus.Ask(ctx.Request.Context(), fetching.NewUserByIdQuery(payload.ID))
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+			return
+		}
+
+		user, ok := result.(domain.User)
+		if !ok {
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+			return
+		}
+
+		newPayload := domain.TokenPayload{ID: user.ID, Email: user.Email}
+		token, err := crypt.CreateToken(newPayload, 24*time.Hour)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "could not create token"})
+			return
+		}
+		refreshToken, err := crypt.CreateToken(newPayload, 30*24*time.Hour)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "could not create token"})
+			return
+		}
+
+		if err := commandBus.Dispatch(ctx.Request.Context(), login.NewLoginCommand(token, refreshToken)); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "could not complete refresh"})
 			return
 		}
 

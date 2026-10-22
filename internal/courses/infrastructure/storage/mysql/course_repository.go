@@ -5,6 +5,7 @@ import (
 	course "app-services-go/internal/courses/domain"
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 
@@ -50,9 +51,9 @@ func (r *CourseRepository) FetchById(ctx context.Context, id string) (course.Cou
 	var entity course.Course
 
 	sb := sqlbuilder.NewSelectBuilder()
-	sb.Select("*")
+	sb.Select("id", "name", "duration")
 	sb.From("courses")
-	sb.Where(sb.Equal("Id", id))
+	sb.Where(sb.Equal("id", id))
 
 	query, args := sb.Build()
 
@@ -61,7 +62,10 @@ func (r *CourseRepository) FetchById(ctx context.Context, id string) (course.Cou
 
 	err := r.db.QueryRowContext(ctxTimeout, query, args...).Scan(&entity.ID, &entity.Name, &entity.Duration)
 	if err != nil {
-		return course.Course{}, fmt.Errorf("error trying to fetch course %s on database: %v", id, err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return course.Course{}, course.ErrCourseNotFound
+		}
+		return course.Course{}, fmt.Errorf("error trying to fetch course %s on database: %w", id, err)
 	}
 
 	return entity, nil

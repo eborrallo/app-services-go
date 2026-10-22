@@ -3,9 +3,11 @@ package cache
 import (
 	"encoding/json"
 	"errors"
-	"github.com/patrickmn/go-cache"
+	"fmt"
 	"log"
 	"time"
+
+	"github.com/patrickmn/go-cache"
 )
 
 const (
@@ -34,7 +36,8 @@ func (c *InMemoryCache) Get(key Key) (item []byte, err error) {
 		log.Println("from cache")
 		res, err := json.Marshal(value)
 		if err != nil {
-			log.Fatal("Error")
+			// Never kill the process over one bad cached value: report it.
+			return nil, fmt.Errorf("error marshalling cached value: %w", err)
 		}
 		return res, nil
 	}
@@ -42,6 +45,7 @@ func (c *InMemoryCache) Get(key Key) (item []byte, err error) {
 
 }
 
-func (c *InMemoryCache) Set(key Key, value Value) {
+func (c *InMemoryCache) Set(key Key, value Value) error {
 	c.client.Set(string(key), value, cache.DefaultExpiration)
+	return nil
 }

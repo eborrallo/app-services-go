@@ -2,23 +2,20 @@ package blokchain
 
 import (
 	"app-services-go/configs"
-	"log"
 
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
 )
 
-func RpcConection() *ethclient.Client {
+func RpcConection() (*ethclient.Client, error) {
 	conf, err := configs.GetBlokchainConfig()
 	if err != nil {
-		log.Fatal(err)
-		panic(err)
+		return nil, err
 	}
 
 	client, err := rpc.Dial(conf.RpcUrl)
 	if err != nil {
-		log.Fatal(err)
-		panic(err)
+		return nil, err
 	}
-	return ethclient.NewClient(client)
+	return ethclient.NewClient(client), nil
 }

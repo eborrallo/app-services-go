@@ -1,10 +1,9 @@
 package login
 
 import (
-	"app-services-go/internal/auth/domain"
-	user "app-services-go/internal/auth/domain"
 	"context"
 
+	"app-services-go/internal/auth/domain"
 	"app-services-go/kit/crypt"
 	"app-services-go/kit/event"
 )
@@ -12,12 +11,12 @@ import (
 // LoginUserService is the default LoginUserService interface
 // implementation returned by creating.NewLoginUserService.
 type LoginUserService struct {
-	UserRepository user.UserRepository
+	UserRepository domain.UserRepository
 	eventBus       event.Bus
 }
 
 // NewLoginUserService returns the default Service interface implementation.
-func NewLoginUserService(UserRepository user.UserRepository, eventBus event.Bus) LoginUserService {
+func NewLoginUserService(UserRepository domain.UserRepository, eventBus event.Bus) LoginUserService {
 	return LoginUserService{
 		UserRepository: UserRepository,
 		eventBus:       eventBus,
@@ -26,13 +25,12 @@ func NewLoginUserService(UserRepository user.UserRepository, eventBus event.Bus)
 
 // LoginUser implements the creating.LoginUserService interface.
 func (s LoginUserService) LoginUser(ctx context.Context, token, refreshToken string) error {
-	user := domain.User{}
-	err := crypt.GetPayloadFromToken(token, &user)
-	if err != nil {
+	payload := domain.TokenPayload{}
+	if err := crypt.GetPayloadFromToken(token, &payload); err != nil {
 		return err
 	}
 
-	User, err := s.UserRepository.FetchById(ctx, user.ID)
+	User, err := s.UserRepository.FetchById(ctx, payload.ID)
 	if err != nil {
 		return err
 	}

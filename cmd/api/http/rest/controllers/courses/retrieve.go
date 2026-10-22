@@ -26,16 +26,19 @@ func RetrieveHandler(queryBus query.Bus) gin.HandlerFunc {
 			return
 		}
 
-		entity, err := queryBus.Ask(ctx, fetching.NewCourseQuery(req.ID))
+		entity, err := queryBus.Ask(ctx.Request.Context(), fetching.NewCourseQuery(req.ID))
 
 		if err != nil {
 			switch {
 			case errors.Is(err, course.ErrInvalidCourseID),
-				errors.Is(err, course.ErrEmptyCourseName), errors.Is(err, course.ErrInvalidCourseID):
+				errors.Is(err, course.ErrEmptyCourseName):
 				ctx.JSON(http.StatusBadRequest, err.Error())
 				return
+			case errors.Is(err, course.ErrCourseNotFound):
+				ctx.JSON(http.StatusNotFound, err.Error())
+				return
 			default:
-				ctx.JSON(http.StatusInternalServerError, err.Error())
+				ctx.JSON(http.StatusInternalServerError, "internal server error")
 				return
 			}
 		}

@@ -7,7 +7,7 @@ import (
 	"app-services-go/kit/command"
 )
 
-const AuthCommandType command.Type = "command.login.user"
+const AuthCommandType command.Type = "command.message_generator.save_message"
 
 type SaveMessageCommand struct {
 	Address string
@@ -41,9 +41,8 @@ func (h SaveMessageCommandHandler) Handle(ctx context.Context, cmd command.Comma
 		return errors.New("unexpected command")
 	}
 
-	h.service.Save(
+	return h.service.Save(
 		createSaveMessageCmd.Address,
 		createSaveMessageCmd.Message,
 	)
-	return nil
 }

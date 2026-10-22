@@ -3,6 +3,7 @@ package auth_web2
 import (
 	"app-services-go/internal/auth/application/fetching"
 	"app-services-go/internal/auth/application/login"
+	"app-services-go/internal/auth/domain"
 	"app-services-go/kit/command"
 	"app-services-go/kit/crypt"
 	"app-services-go/kit/query"
@@ -21,22 +22,37 @@ func LoginHandler(commandBus command.Bus, queryBus query.Bus) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var req loginRequest
 		if err := ctx.BindJSON(&req); err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 			return
 		}
 
-		user, err := queryBus.Ask(ctx, fetching.NewUserByEmailQuery(req.Email))
+		result, err := queryBus.Ask(ctx.Request.Context(), fetching.NewUserByEmailQuery(req.Email))
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			// Do not reveal whether the email exists: same 401 as a bad password.
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
 			return
 		}
 
-		token := crypt.CreateToken(user, 24*time.Hour)
-		refreshToken := crypt.CreateToken(user, 30*24*time.Hour)
+		user, ok := result.(domain.User)
+		if !ok || !crypt.Compare(req.Password, user.Password) {
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+			return
+		}
 
-		err = commandBus.Dispatch(ctx, login.NewLoginCommand(token, refreshToken))
+		payload := domain.TokenPayload{ID: user.ID, Email: user.Email}
+		token, err := crypt.CreateToken(payload, 24*time.Hour)
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "could not create token"})
+			return
+		}
+		refreshToken, err := crypt.CreateToken(payload, 30*24*time.Hour)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "could not create token"})
+			return
+		}
+
+		if err := commandBus.Dispatch(ctx.Request.Context(), login.NewLoginCommand(token, refreshToken)); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "could not complete login"})
 			return
 		}
 

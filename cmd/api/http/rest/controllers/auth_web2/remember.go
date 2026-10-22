@@ -17,23 +17,23 @@ func RememberHandler(commandBus command.Bus) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var req rememberRequest
 		if err := ctx.BindJSON(&req); err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 			return
 		}
 
 		base64Token := ctx.Param("token")
 		token, err := base64.URLEncoding.DecodeString(base64Token)
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, "invalid token")
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid token"})
 			return
 		}
 		if string(token) == "" {
-			ctx.JSON(http.StatusBadRequest, "invalid token")
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid token"})
 			return
 		}
-		err = commandBus.Dispatch(ctx, remember.NewPasswordUserCommand(string(base64Token), req.NewPassword))
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, err.Error())
+		// Dispatch the DECODED token; the remember handler decrypts it.
+		if err := commandBus.Dispatch(ctx.Request.Context(), remember.NewPasswordUserCommand(string(token), req.NewPassword)); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "could not update password"})
 			return
 		}
 		ctx.Status(http.StatusOK)

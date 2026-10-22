@@ -9,16 +9,30 @@ import (
 	"github.com/golang-jwt/jwt"
 )
 
-func CreateToken(payload interface{}, expirationTimeInHours time.Duration) string {
+// keyFunc returns the HMAC secret only after asserting the token was signed
+// with an HMAC method. Without this check a token could claim "alg":"none" or a
+// different algorithm (algorithm-confusion attack).
+func keyFunc(secretKey []byte) jwt.Keyfunc {
+	return func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return secretKey, nil
+	}
+}
+
+// CreateToken signs payload into an HS256 JWT. It returns an error instead of
+// panicking. Callers must pass a minimal claims value, never the whole User.
+func CreateToken(payload interface{}, expirationTimeInHours time.Duration) (string, error) {
 	config, err := configs.GetCryptConfig()
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 	secretKey := []byte(config.Secret)
 
 	p, err := json.Marshal(payload)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
 		jwt.MapClaims{
@@ -26,25 +40,17 @@ func CreateToken(payload interface{}, expirationTimeInHours time.Duration) strin
 			"exp":     time.Now().Add(expirationTimeInHours).Unix(),
 		})
 
-	tokenString, err := token.SignedString(secretKey)
-	if err != nil {
-		panic(err)
-	}
-
-	return tokenString
+	return token.SignedString(secretKey)
 }
 
 func VerifyToken(tokenString string) error {
 	config, err := configs.GetCryptConfig()
 	if err != nil {
-		panic(err)
+		return err
 	}
 	secretKey := []byte(config.Secret)
 
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return secretKey, nil
-	})
-
+	token, err := jwt.Parse(tokenString, keyFunc(secretKey))
 	if err != nil {
 		return err
 	}
@@ -66,15 +72,11 @@ func VerifyToken(tokenString string) error {
 func GetPayloadFromToken(tokenString string, payload interface{}) error {
 	config, err := configs.GetCryptConfig()
 	if err != nil {
-		panic(err)
+		return err
 	}
 	secretKey := []byte(config.Secret)
 
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-
-		return secretKey, nil
-	})
-
+	token, err := jwt.Parse(tokenString, keyFunc(secretKey))
 	if err != nil {
 		return err
 	}
@@ -101,5 +103,4 @@ func GetPayloadFromToken(tokenString string, payload interface{}) error {
 	}
 
 	return nil
-
 }

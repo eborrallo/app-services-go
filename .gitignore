@@ -30,6 +30,7 @@ vendor/
 # Temp folders.
 .parcel-cache/
 tmp/
+cmd/api/tmp/
 
 # Logs.
 logs/

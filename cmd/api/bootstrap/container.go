@@ -15,17 +15,26 @@ import (
 
 func Container() (*command.CommandBus, *query.QueryBus, redis.UniversalClient, error) {
 
-	dbConf, _ := configs.GetDatabaseConfig()
+	dbConf, err := configs.GetDatabaseConfig()
+	if err != nil {
+		return nil, nil, nil, err
+	}
 	db, err := storage.MySqlConnection(dbConf)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	redisConf, _ := configs.GetRedisConfig()
+	redisConf, err := configs.GetRedisConfig()
+	if err != nil {
+		return nil, nil, nil, err
+	}
 	redisConnection := cache.RedisConnection(redisConf)
 
-	rabbitMQConf, _ := configs.GetRabbitMQConfig()
-	rabbitConnection := rabbitMQ.NewConnection(rabbitMQ.ConnectionSettings{
+	rabbitMQConf, err := configs.GetRabbitMQConfig()
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	rabbitConnection, err := rabbitMQ.NewConnection(rabbitMQ.ConnectionSettings{
 		Username: rabbitMQConf.RabbitMQUser,
 		Password: rabbitMQConf.RabbitMQPassword,
 		Vhost:    rabbitMQConf.RabbitMQVhost,
@@ -35,6 +44,9 @@ func Container() (*command.CommandBus, *query.QueryBus, redis.UniversalClient, e
 			Port:     rabbitMQConf.RabbitMQPort,
 		},
 	})
+	if err != nil {
+		return nil, nil, nil, err
+	}
 	rabbitFormatter := *rabbitMQ.NewQueueFormatter("domain_event")
 
 	var (
@@ -44,7 +56,9 @@ func Container() (*command.CommandBus, *query.QueryBus, redis.UniversalClient, e
 	)
 	subscribers := []event.Subscriber{}
 
-	providers.AuthContainer(db, commandBus, queryBus, eventBus, &subscribers)
+	if err := providers.AuthContainer(db, commandBus, queryBus, eventBus, &subscribers, redisConnection); err != nil {
+		return nil, nil, nil, err
+	}
 	providers.CoursesContainer(db, commandBus, queryBus, eventBus, &subscribers)
 
 	subscribersCopy := make([]event.Subscriber, len(subscribers))

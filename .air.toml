@@ -5,7 +5,7 @@ tmp_dir = "tmp"
 [build]
 args_bin = []
 bin = "./tmp/main"
-cmd = "go run github.com/a-h/templ/cmd/templ@latest generate && go build -o ./tmp/main ./cmd/api"
+cmd = "go run github.com/a-h/templ/cmd/templ@v0.2.646 generate && go build -o ./tmp/main ./cmd/api"
 delay = 1000
 exclude_dir = [
   ".parcel-cache",

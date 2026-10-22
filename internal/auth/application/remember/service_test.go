@@ -31,14 +31,14 @@ func Test_PasswordUserService_Valdiate_Succeed(t *testing.T) {
 	userRepositoryMock := new(storagemocks.UserRepository)
 	userRepositoryMock.On("FetchById", mock.Anything, userID).Return(user, nil)
 	userRepositoryMock.On("Update", mock.Anything, mock.MatchedBy(func(user domain.User) bool {
-		return user.Password == crypt.Md5(newUserPassword)
+		return crypt.Compare(newUserPassword, user.Password)
 	})).Return(nil)
 
 	eventBusMock := new(eventmocks.Bus)
 	eventBusMock.On("Publish", mock.Anything, mock.MatchedBy(func(_events []event.Event) bool {
 		evt := _events[0].(events.UserPasswordChangedEvent)
 
-		return evt.UserPassword() == crypt.Md5(newUserPassword) && evt.UserEmail() == userEmail && evt.UserID() == userID
+		return crypt.Compare(newUserPassword, evt.UserPassword()) && evt.UserEmail() == userEmail && evt.UserID() == userID
 	})).Return(nil)
 
 	eventBusMock.On("Publish", mock.Anything, mock.AnythingOfType("[]event.Event")).Return(nil)

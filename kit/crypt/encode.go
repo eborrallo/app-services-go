@@ -6,6 +6,7 @@ import (
 	"crypto/cipher"
 	"crypto/md5"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
@@ -14,84 +15,89 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// Md5 is kept only for backwards compatibility with old data. Do NOT use it for
+// passwords: it is unsalted and fast. Use Encode/Compare (bcrypt) instead.
 func Md5(txt string) string {
 	hash := md5.Sum([]byte(txt))
 	return hex.EncodeToString(hash[:])
 }
+
+// Encode hashes a secret (e.g. a password) with bcrypt at the default cost.
 func Encode(txt string) (string, error) {
-
-	txtEncoded, error := bcrypt.GenerateFromPassword([]byte(txt), bcrypt.MinCost)
-
-	if error != nil {
-		return "", error
+	txtEncoded, err := bcrypt.GenerateFromPassword([]byte(txt), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
 	}
-	return string(txtEncoded[:]), nil
-
+	return string(txtEncoded), nil
 }
+
+// Compare reports whether txt matches the bcrypt-hashed txtEncoded.
 func Compare(txt string, txtEncoded string) bool {
-
-	error := bcrypt.CompareHashAndPassword([]byte(txtEncoded), []byte(txt))
-
-	return error == nil
-
+	return bcrypt.CompareHashAndPassword([]byte(txtEncoded), []byte(txt)) == nil
 }
 
-func Encrypt(text string) string {
+// aesKey derives a fixed 32-byte AES-256 key from the configured secret. This
+// keeps the key length always valid regardless of the secret's length, and
+// means the AES key is not the raw JWT signing secret.
+func aesKey(secret string) []byte {
+	sum := sha256.Sum256([]byte("aes:" + secret))
+	return sum[:]
+}
+
+// Encrypt returns a base64url AES-CFB ciphertext of text. It returns an error
+// instead of panicking on misconfiguration.
+func Encrypt(text string) (string, error) {
 	config, err := configs.GetCryptConfig()
 	if err != nil {
-		panic(err)
+		return "", err
 	}
-	key := []byte(config.Secret)
 
-	// key := []byte(keyText)
-	plaintext := []byte(text)
-
-	block, err := aes.NewCipher(key)
+	block, err := aes.NewCipher(aesKey(config.Secret))
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
-	// The IV needs to be unique, but not secure. Therefore it's common to
-	// include it at the beginning of the ciphertext.
+	plaintext := []byte(text)
+	// The IV needs to be unique, but not secure. Prepend it to the ciphertext.
 	ciphertext := make([]byte, aes.BlockSize+len(plaintext))
 	iv := ciphertext[:aes.BlockSize]
 	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
-		panic(err)
+		return "", err
 	}
 
 	stream := cipher.NewCFBEncrypter(block, iv)
 	stream.XORKeyStream(ciphertext[aes.BlockSize:], plaintext)
 
-	// convert to base64
-	return base64.URLEncoding.EncodeToString(ciphertext)
+	return base64.URLEncoding.EncodeToString(ciphertext), nil
 }
 
-func Decrypt(cryptoText string) string {
+// Decrypt reverses Encrypt. It returns an error (never panics) on malformed
+// input, so untrusted tokens from the URL cannot crash the request.
+func Decrypt(cryptoText string) (string, error) {
 	config, err := configs.GetCryptConfig()
 	if err != nil {
-		panic(err)
+		return "", err
 	}
-	key := []byte(config.Secret)
 
-	ciphertext, _ := base64.URLEncoding.DecodeString(cryptoText)
-
-	block, err := aes.NewCipher(key)
+	ciphertext, err := base64.URLEncoding.DecodeString(cryptoText)
 	if err != nil {
-		panic(err)
+		return "", fmt.Errorf("invalid token encoding: %w", err)
 	}
 
-	// The IV needs to be unique, but not secure. Therefore it's common to
-	// include it at the beginning of the ciphertext.
+	block, err := aes.NewCipher(aesKey(config.Secret))
+	if err != nil {
+		return "", err
+	}
+
 	if len(ciphertext) < aes.BlockSize {
-		panic("ciphertext too short")
+		return "", fmt.Errorf("invalid token: ciphertext too short")
 	}
 	iv := ciphertext[:aes.BlockSize]
 	ciphertext = ciphertext[aes.BlockSize:]
 
 	stream := cipher.NewCFBDecrypter(block, iv)
-
 	// XORKeyStream can work in-place if the two arguments are the same.
 	stream.XORKeyStream(ciphertext, ciphertext)
 
-	return fmt.Sprintf("%s", ciphertext)
+	return string(ciphertext), nil
 }

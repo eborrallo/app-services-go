@@ -57,4 +57,3 @@ func RegisterRoutes(s *gin.Engine) {
 	// Handle API endpoints.
 	s.GET("/api/hello-world", showContentAPIHandler)
 }
-

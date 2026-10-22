@@ -26,7 +26,7 @@ func CreateHandler(commandBus command.Bus) gin.HandlerFunc {
 			return
 		}
 
-		err := commandBus.Dispatch(ctx, creating.NewCourseCommand(
+		err := commandBus.Dispatch(ctx.Request.Context(), creating.NewCourseCommand(
 			req.ID,
 			req.Name,
 			req.Duration,
@@ -35,7 +35,7 @@ func CreateHandler(commandBus command.Bus) gin.HandlerFunc {
 		if err != nil {
 			switch {
 			case errors.Is(err, course.ErrInvalidCourseID),
-				errors.Is(err, course.ErrEmptyCourseName), errors.Is(err, course.ErrInvalidCourseID):
+				errors.Is(err, course.ErrEmptyCourseName):
 				ctx.JSON(http.StatusBadRequest, err.Error())
 				return
 			default:

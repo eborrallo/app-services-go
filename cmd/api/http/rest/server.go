@@ -5,6 +5,7 @@ import (
 	"app-services-go/cmd/api/http/rest/controllers/auth_web3"
 	"app-services-go/cmd/api/http/rest/controllers/courses"
 	"app-services-go/cmd/api/http/rest/controllers/health"
+	"app-services-go/cmd/api/http/rest/middleware/auth"
 	"app-services-go/cmd/api/http/rest/middleware/cache"
 	"app-services-go/cmd/api/http/rest/middleware/logging"
 	"app-services-go/cmd/api/http/rest/middleware/recovery"
@@ -26,7 +27,8 @@ func RegisterRoutes(s *gin.Engine, commandBus command.Bus, queryBus query.Bus, r
 	api := s.Group("/api")
 	{
 		api.GET("/health", cache.Middleware(redisConnection, 5*time.Second), health.CheckHandler())
-		coursesApi := api.Group("/course")
+		// Course endpoints are protected resources: require a valid JWT.
+		coursesApi := api.Group("/course", auth.Middleware())
 		{
 			coursesApi.POST("/", courses.CreateHandler(commandBus))
 			coursesApi.GET("/:id", courses.RetrieveHandler(queryBus))
@@ -36,6 +38,7 @@ func RegisterRoutes(s *gin.Engine, commandBus command.Bus, queryBus query.Bus, r
 			authApi.POST("/user", auth_web2.CreateHandler(commandBus))
 			authApi.GET("/validate/:token", auth_web2.ValidateHandler(commandBus))
 			authApi.POST("/login", auth_web2.LoginHandler(commandBus, queryBus))
+			authApi.POST("/refresh", auth_web2.RefreshHandler(commandBus, queryBus))
 			authApi.POST("/forgot", auth_web2.ForgotHandler(commandBus, queryBus))
 			authApi.POST("/remember/:token", auth_web2.RememberHandler(commandBus))
 			authApi.GET("/message/:address", auth_web3.MessageHandler(commandBus, message_generator.NewMessageGeneratorService()))

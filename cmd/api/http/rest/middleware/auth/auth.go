@@ -18,14 +18,14 @@ func Middleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		jwtToken, err := extractBearerToken(c.GetHeader("Authorization"))
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusBadRequest, UnsignedResponse{
+			c.AbortWithStatusJSON(http.StatusUnauthorized, UnsignedResponse{
 				Message: err.Error(),
 			})
 			return
 		}
 		err = crypt.VerifyToken(jwtToken)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusBadRequest, UnsignedResponse{
+			c.AbortWithStatusJSON(http.StatusUnauthorized, UnsignedResponse{
 				Message: "bad jwt token",
 			})
 			return
@@ -40,10 +40,15 @@ func extractBearerToken(header string) (string, error) {
 		return "", errors.New("bad header value given")
 	}
 
-	jwtToken := strings.Split(header, " ")
-	if len(jwtToken) != 2 {
+	parts := strings.Split(header, " ")
+	if len(parts) != 2 {
 		return "", errors.New("incorrectly formatted authorization header")
 	}
 
-	return jwtToken[1], nil
+	// The scheme must be "Bearer"; otherwise parts[1] is not a bearer token.
+	if parts[0] != "Bearer" {
+		return "", errors.New("authorization header must use the Bearer scheme")
+	}
+
+	return parts[1], nil
 }

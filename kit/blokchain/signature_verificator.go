@@ -39,7 +39,14 @@ func (sv *SignatureVerificator) VerifyMessage(message string, signature string, 
 	var valid bool
 	if bytes.Equal(code, common.FromHex(sv.EMPTY_BYTE)) {
 		// Normal wallet
-		sig := hexutil.MustDecode(signature)
+		sig, err := hexutil.Decode(signature)
+		if err != nil {
+			return fmt.Errorf("invalid signature encoding: %w", err)
+		}
+		if len(sig) != 65 {
+			return fmt.Errorf("invalid signature length: expected 65 bytes, got %d", len(sig))
+		}
+
 		msg := []byte(message)
 		msg = accounts.TextHash(msg)
 		if sig[crypto.RecoveryIDOffset] == 27 || sig[crypto.RecoveryIDOffset] == 28 {
@@ -55,7 +62,9 @@ func (sv *SignatureVerificator) VerifyMessage(message string, signature string, 
 		valid = strings.EqualFold(ethereumAddress, recoveredAddr.Hex())
 
 	} else {
-		// Smart contract wallet
+		// Smart contract wallet (EIP-1271). Full on-chain verification is not
+		// implemented yet, so instead of silently returning "invalid" we surface
+		// a clear, explicit error for callers using a contract wallet.
 		/*
 			contractAddr := common.HexToAddress(ethereumAddress)
 			contract, err := NewEIP1271(contractAddr, sv.ethersProvider)
@@ -72,6 +81,7 @@ func (sv *SignatureVerificator) VerifyMessage(message string, signature string, 
 				valid = bytes.Equal(returnValue[:], common.FromHex(sv.eip1271MagicLink))
 			}
 		*/
+		return fmt.Errorf("contract wallets are not supported")
 	}
 
 	if !valid {
